@@ -21,9 +21,21 @@
 
 \maketitle
 
-\begin{abstract}
-This paper presents FOKS (Federated Open Key System), a decentralized key management system designed to provide secure and flexible key distribution across federated networks. We describe the system architecture, security model, and implementation details.
-\end{abstract}
+\begin{abstract} This paper presents FOKS (Federated Open Key System), a
+decentralized key management system designed to provide secure and flexible key
+distribution across federated networks. The basic problem addressed is that of
+of two parties sharing end-to-end encrypted data across the internet, where both
+parties have several devices. They might rotate devices, form mutable teams with
+other users, or even teams of teams in an arbitrary graph. They need to share
+secret key material to facilitate symmetric encryption, and this material must
+rotate whenever devices are replaced, or team membership changes.  This is a
+very natural problem but one that still lacks an adequate solution.  Morever, we
+believe key management should not lock users into a particular, walled provider,
+but instead, should allow for federation and independent management of server
+resouces, as we see in HTTP and SMTP.  We describe the system architecture,
+security model, and implementation details of a system that achieves secure,
+federated key exchange, and enables useful applications like end-to-end
+encrypted data sharing and git hosting.  \end{abstract}
 
 \section{Introduction}
 % Introduction content goes here
