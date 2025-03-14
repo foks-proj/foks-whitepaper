@@ -9,7 +9,7 @@
 \usepackage{xcolor}
 
 \geometry{
-    a4paper,
+    letterpaper,
     margin=1in
 }
 
@@ -21,7 +21,9 @@
 
 \maketitle
 
-\begin{abstract} This paper presents FOKS (Federated Open Key System), a
+\begin{abstract}
+
+This paper presents FOKS (Federated Open Key System), a
 decentralized key management system designed to provide secure and flexible key
 distribution across federated networks. The basic problem addressed is that of
 of two parties sharing end-to-end encrypted data across the internet, where both
@@ -35,22 +37,35 @@ but instead, should allow for federation and independent management of server
 resouces, as we see in HTTP and SMTP.  We describe the system architecture,
 security model, and implementation details of a system that achieves secure,
 federated key exchange, and enables useful applications like end-to-end
-encrypted data sharing and git hosting.  \end{abstract}
+encrypted data sharing and git hosting.
+
+\end{abstract}
+
 
 \section{Introduction}
+
+\input{threatmodel}
 % Introduction content goes here
 
-\section{Background}
-% Background content goes here
+\input{design}
 
-\section{System Architecture}
+\section{Applications}
+
+\subsection{Key-Value Store}
+
+\subsection{Git}
 % Architecture content goes here
 
-\section{Security Model}
-% Security model content goes here
-
 \section{Implementation}
+
+\subsection{Snowpack Protocol Language}
+
+\subsection{Entities and IDs}
+\label{sec:ids}
 % Implementation details go here
+
+\subsection{Authentication}
+\label{sec:authentication}
 
 \section{Evaluation}
 % Evaluation content goes here

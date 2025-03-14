@@ -1,0 +1,229 @@
+
+\section{Design}
+
+FOKS is a classic client-server system. At a hight level, the clients
+manage private keys, and the server manages public keys, encryptions of, 
+shared secret keys, and encrypted data. Users generally trust their
+servers to be online, available and not to intentionally sabotage
+agreed-upon protocols. 
+
+\subsection{System Architecture}
+
+Much like HTTP or STMP, FOKS clients communicate with one or more servers,
+depending on where users have accounts. They can safely ignore the other servers
+in the system. Most communication is between client and server, and there is
+little if any server-to-server or client-to-client communication.  This
+property simplifies protocol upgrades and network configuration.
+
+Each client can speak for many users, as users can have accounts on different
+servers, or several accounts on the same server. By analogy, an email client can
+server multiple emails accounts for the same user concurrently, say one for work
+and one for personal use. Or a web browser might have different personae (with
+different cookies, preeferences, passwords and history) for the same user.
+
+Each of the users can of course have multiple devices, like a desktop, a laptop,
+a phone, and a YubiKey. Additionally, users can have "backup devices", which can
+be writted down on paper and stored in a safe place. The system recommends at
+least two devices to prevent data loss. That is, these devices have private keys
+that decrypt data, and the loss of the last key prevents decryption of the data.
+Obviously there is a trade-off here: the more devices, the more likely the user
+will lose one, or have one stolen; the fewer devices, the more likely the user
+will lose all devices and therefore access to data. Some optimal middle ground
+exists, but varies with the users and their behaviors. 
+
+\subsection{Key Hierarchy}
+
+The FOKS key hierarchy sits at the core of the system. It aims to provide users
+with a sequence of symmetric keys shared across all of their devices, so that
+they can store data encrypted with the latest key, and can decrypt (and
+authenticate) data encrypted with older keys when necessary. Similarly, users in
+a team should share secret keys that users outside their teams cannot see, allowing
+them to share encrypted data via untrusted FOKS servers.
+
+\subsubsection{Device Keys}
+
+When a user sits down at a FOKS client to signup or provision a new device
+for an existing account, she first creates a new key-pair specifically
+for that device. The private key never leaves the device. She shares the public key
+with the FOKS server, who eventually selectively shares it with user users.
+We detail the exact cryptography in Section~\ref{sec:cryptography}.
+
+Hardware keys that support the PIV protocol (like YubiKey version 5 and later)
+can also be used as device keys. These devices get randomly-generated private
+keys in the factory, written to one of 20 possible "slots." FOKS users select
+a slot to use, and the client sends the corresponding public key to the FOKS 
+server. Signing and decryption operations happen on the device against the chose
+slot. 
+
+\subsubsection{Per-User Keys (PUKS)}
+
+Every user on the FOKS system has one of more per-user keys, or PUKS. A PUKS
+is a randomly-generated key-pair whose private key is encrypted for each of
+the device public keys. This way, all current devices can access the current
+PUK secret key, and perform decryptions or signatures for the current PUK public
+key. The client makes a new PUK every time the user revokes a device. The system
+encrypts the old PUK secret keys for the new PUK secret key. This way,
+a device that has access to the latest PUK can get access easily to all prior
+PUKs.
+
+Once the PUK sequence is estblished, the system has a convenient way to encrypt
+a data for all of the user's device --- it simply encrypts the data for the 
+user's latest PUK.
+
+\subsubsection{Per-Team Keys (PTKs)}
+
+Each team has a sequence of per-team-keys, or PTKs, which are analogous
+to PUKs for users. Upon creation, a team gets a new random PTK. The 
+client performing the creation sends the public part of the PTK to the server.
+The private part of the PTK is encrypted for each member's latest PUK,
+and therefore is available on each of the user's devices.
+
+As with PUKs, data that the team shares is encrypted for the team's latest PTK,
+and all members can decrypt it. As we will see in Section~\ref{sec:teams}, teams can
+join other teams, but the key hierarchy works just the same. When team $A$ joins
+team $B$, the secret part of team $B$'s PTK is encrypted for team $A$'s latest PTK,
+so that all members of team $A$ can decrypt $B$'s PTK, and therefore, all of
+$B$'s encrypted data.
+
+\subsection{Key Roles}
+
+\newcommand{\owner}{\textsf{owner}}
+\newcommand{\admin}{\textsf{admin}}
+\newcommand{\reader}{\textsf{reader}}
+\newcommand{\role}[1]{\textsf{role}(#1)}
+
+
+FOKS has a notion of a ``role'' for device keys, PUKs and PTKs. The roles
+are: \owner, \admin, and \reader, but \reader{} keys have a "visibility level"
+that varies between -32768 and 32767. There is a total ordering among key roles,
+so that $\owner > \admin > \reader$, and between reader keys, $k_1 > k_2$ iff
+$k_1$ has a higher visibility level than $k_2$.
+
+The important property enforced is that we only encrypt PUK $k$ for device key
+$j$ if $\role{k} \le \role{j}$, and similarly, we only encrypt PTK $k$ for PUK
+$j$ if $\role{k} \le \role{j}$.
+
+The idea here is that the owners of a group get to see all the keys; the admins
+can see the admin and reader keys; and the readers can see keys at or below
+their visiblility level. This configuration allows groups to have
+lower-privileged members, and for users to have lower-privileged devices. At
+Keybase, a similar but less-flexible property allows ``bots'' into teams, so that
+all the members of the teams can interact with the bots, but the members had
+channels to communicate that the bots aren't privvy to.  For now, all user
+devices are at the \owner{} role, but we plan to relax this requirement in the
+future.
+
+\subsection{Data Structures}
+
+We now have some basic motivation as to what the key system ought to achieve.
+It ought to allow groups of devices, groups of users, or groups of users
+and teams to share a secret encryption key. From there, they can share data
+encrypted (and authenticated) with that key. But the question becomes,
+how are users formulated from devices, and how are teams formulated from users
+so that only desired members are in the group, especially if the server
+behave maliciously?
+
+For instance, a malicious server might fool a user into encrypting secret data
+for an invalid device, or team administrator into encrypted data for an invalid
+user.
+
+\subsubsection{Signature Chains}
+
+FOKS uses the same mechanism as Keybase here --- the signature chain (or sigchain for short).
+The sigchain is a series of signed statements that form a cryptographic chain, meaning they
+can only be replayed in the intended order. Replaying the chain allows a viewer to
+confirm the chain appears how the author intended and wasn't tampered with, even if
+the set of signers varies over time. Of course, signers do vary over time as
+users add and remove devices, or as they add and remove members from teams.
+
+Each user (and team) gets its own sigchain. The sigchain keeps an indellable record
+of which keys can update the chain, and which PUKs or PTKs are currently
+active for the user (or team).
+
+\paragraph{Users} The first link in a sigchain is called the ``eldest'' link. For user sigchains,
+the first device generates this link, generates the first PUK, and then computes
+a signature over the following data:
+
+
+\begin{enumerate}\itemsep0em
+    \item \label{item:prev} The hash of the previous link in the chain (nil for the eldest)
+    \item The current sequence number of the sigchain (which is 1 for the eldest link)
+    \item A random commitment to the next tree location (see Section~\ref{sec:location-hiding})
+    \item The user's ID and the server's host ID (see Section~\ref{sec:hostchains})
+    \item \label{item:puk} The user's new PUK public key
+    \item The user's new device key
+    \item The current Merkle root hash (see Section~\ref{sec:merkle})
+    \item A ``subchain tree location seed commitment`` (see Section~\ref{sec:subchains})
+    \item A cryptographic commitment to the user's username (see Section~\ref{sec:commitments})
+    \item A cryptographic commitment to the user's device name (picked by the user)
+    \item The role of the new device (currently always \owner ).
+    \item For Yubikeys, a public ``subkey' (see Section~\ref{sec:authentication})
+\end{enumerate}
+
+The public portion of the PUK computes this signature first; then the device key
+computes a signature over the payload and the previous signature (signed with
+the PUK). The client uploads the whole package as the user's eldest link.
+
+Subsequent links proceed in largely the same way, with a few minor differences.
+The previous hash (\ref{item:prev}) is the collision-resistent hash of the 
+package uploaded in the previous step. New PUK public keys (\ref{item:puk}) do
+not appear on device addition; and likewise, PUK signatures are only performed when
+new PUKs are introduced, so would not be present on device addition.
+
+\paragraph{Teams} 
+
+
+\subsubsection{Hostchains}
+\label{sec:hostchains}
+
+\subsubsection{Merkle Tree}
+\label{sec:merkle}
+
+\subsubsection{Location Hiding}
+\label{sec:location-hiding}
+
+\subsubsection{Subchains}
+\label{sec:subchains}
+
+
+\subsection{Provisioning}
+
+\subsubsection{Device-to-Device}
+
+\subsubsection{Yubikey-to-Device}
+
+\subsubsection{Device-to-Yubikey}
+
+\subsection{Teams}
+\label{sec:teams}
+
+\subsubsection{Invitation Sequence}
+
+\subsection{Key Rotations}
+
+\subsubsection{Removal Keys}
+
+\subsection{Cryptographic Primitives}
+\label{sec:cryptography}
+
+\subsubsection{Key Derivation}
+
+\subsubsection{Yubikeys}
+
+
+\subsubsection{PQ-KEM and PIV Support}
+
+\subsection{Privacy}
+
+\subsubsection{Blinding and Commitments}
+\label{sec:commitments}
+
+\subsubsection{Sigchain Visibility}
+
+\subsection{Secret Key Management}
+
+\subsubsection{Secure Enclaves}
+
+\subsubsection{Passphrase-based Management}
+
+\subsection{Beacon Server}
