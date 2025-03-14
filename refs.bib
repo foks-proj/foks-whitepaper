@@ -42,3 +42,187 @@ month = dec
   address={Washington, D.C.},
   url={https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/melara}
 }
+
+@misc{rfc8032,
+	series       = {Request for Comments},
+	number       = 8032,
+	howpublished = {RFC 8032},
+	publisher    = {RFC Editor},
+	doi          = {10.17487/RFC8032},
+	url          = {https://rfc-editor.org/rfc/rfc8032.txt},
+	author       = {Simon Josefsson and Ilari Liusvaara},
+	title        = {{Edwards-Curve Digital Signature Algorithm (EdDSA)}},
+	pagetotal    = 60,
+	year         = 2017,
+	month        = jan,
+	abstract     = {This document describes elliptic curve signature scheme Edwards-curve Digital Signature Algorithm (EdDSA). The algorithm is instantiated with recommended parameters for the edwards25519 and edwards448 curves. An example implementation and test vectors are provided.},
+}
+
+@misc{rfc5869,
+	series       = {Request for Comments},
+	number       = 5869,
+	howpublished = {RFC 5869},
+	publisher    = {RFC Editor},
+	doi          = {10.17487/RFC5869},
+	url          = {https://rfc-editor.org/rfc/rfc5869.txt},
+	author       = {Hugo Krawczyk and Pasi Eronen},
+	title        = {{HMAC-based Extract-and-Expand Key Derivation Function (HKDF)}},
+	pagetotal    = 14,
+	year         = 2010,
+	month        = may,
+	abstract     = {This document specifies a simple Hashed Message Authentication Code (HMAC)-based key derivation function (HKDF), which can be used as a building block in various protocols and applications. The key derivation function (KDF) is intended to support a wide range of applications and requirements, and is conservative in its use of cryptographic hash functions. This document is not an Internet Standards Track specification; it is published for informational purposes.},
+}
+
+@misc{rfc7636,
+	series       = {Request for Comments},
+	number       = 7636,
+	howpublished = {RFC 7636},
+	publisher    = {RFC Editor},
+	doi          = {10.17487/RFC7636},
+	url          = {https://rfc-editor.org/rfc/rfc7636.txt},
+	author       = {Sakimura, N. and Bradley, J. and N. Agarwal},
+	title        = {{Proof Key for Code Exchange by OAuth Public Clients}},
+	year         = 2015,
+	month        = september,
+}
+
+@inproceedings{chase2019seemless,
+	title     = {{SEEMless}: Secure End-to-End Encrypted Messaging with less Trust},
+	author    = {Chase, Melissa and Deshpande, Apoorvaa and Ghosh, Esha and Malvai, Harjasleen},
+	booktitle = {Proceedings of the 2019 ACM SIGSAC Conference on Computer and Communications Security},
+	pages     = {1639--1656},
+	year      = {2019}
+}
+
+@inproceedings{melara2015coniks,
+	title     = {{CONIKS}: Bringing Key Transparency to End Users},
+	author    = {Melara, Marcela S and Blankstein, Aaron and Bonneau, Joseph and Felten, Edward W and Freedman, Michael J},
+	booktitle = {24th {USENIX} Security Symposium ({USENIX} Security 15)},
+	pages     = {383--398},
+	year      = {2015}
+}
+
+@inproceedings{rzks,
+  title={Rotatable zero knowledge sets: Post compromise secure auditable dictionaries with application to key transparency},
+  author={Chen, Brian and Dodis, Yevgeniy and Ghosh, Esha and Goldin, Eli and Kesavan, Balachandar and Marcedone, Antonio and Mou, Merry Ember},
+  booktitle={Advances in Cryptology--ASIACRYPT 2022},
+  pages={547--580},
+  year={2023},
+  organization={Springer}
+}
+
+@article{langley2013certificate,
+	title   = {Certificate Transparency},
+	author  = {Langley, Adam and Kasper, Emilia and Laurie, Ben},
+	journal = {Internet Engineering Task Force (IETF)},
+	year    = {2013}
+}
+@article{eddsa,
+    title   = {High-speed high-security signatures},
+    author  = {Bernstein, Daniel J. and Duif, Niels and Lange, Tanja and Schwabe, Peter and Yang, Bo-Yin},
+    journal = {Journal of Cryptographic Engineering 2},
+    year    = {2012}
+}
+
+@misc{keytransparency,
+	title        = {Key Transparency},
+	howpublished = {Available at \url{https://github.com/google/keytransparency/}}
+}
+@misc{keybase,
+    title = {Keybase},
+    howpublished = {Available at \url{https://keybase.io}}
+}
+
+@inproceedings{messagefranking,
+  title={Message franking via committing authenticated encryption},
+  author={Grubbs, Paul and Lu, Jiahui and Ristenpart, Thomas},
+  booktitle={Advances in Cryptology--CRYPTO 2017},
+  pages={66--97},
+  year={2017},
+  organization={Springer}
+}
+
+@misc{sp80038d,
+	author    = {Dworkin, Morris J.},
+	title     = {{SP 800-38D. Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC}},
+	year      = {2007},
+	publisher = {National Institute of Standards & Technology},
+	address   = {Gaithersburg, MD, USA}
+}
+
+@misc{nacl,
+	title        = {{NaCl}: Networking and Cryptography library},
+	author       = {Bernstein, Daniel J. and Lange, Tanja and Schwabe, Peter},
+	howpublished = {Available at \url{https://nacl.cr.yp.to/}}
+}
+
+@inproceedings{bernstein2006curve25519,
+	title     = {{Curve25519}: new {Diffie-Hellman} speed records},
+	author    = {Daniel J. Bernstein},
+	year      = {2006},
+	doi       = {10.1007/11745853_14},
+	language  = {English},
+	isbn      = {3-540-33851-9},
+	series    = {Lecture Notes in Computer Science},
+	publisher = {Springer},
+	pages     = {207--228},
+	editor    = {M. Yung and Y. Dodis and A. Kiayias and T. Malkin},
+	booktitle = {Public Key Cryptography - PKC 2006 (9th International Conference on Practice and Theory in Public-Key Cryptography, New York NY, USA, April 24-26, 2006, Proceedings)},
+	address   = {Germany},
+}
+
+@misc{libsodium, title={The Sodium cryptography library},
+      url={https://download.libsodium.org/doc/}, author={Denis, Frank}, journal={Libsodium},
+      howpublished={Available at \url{https://download.libsodium.org/doc/}},
+      year={2013}, month={Jun}}
+      
+@unpublished{openssl,
+  added-at = {2009-01-31T03:43:30.000+0100},
+  author = {{The Open{SSL} Project}},
+  biburl = {https://www.bibsonomy.org/bibtex/28796dfa7899f1eeab5e921051d6c3eed/ragibhasan},
+  interhash = {369b4645c53db65a4f7ba1ff0a4eaf0f},
+  intrahash = {8796dfa7899f1eeab5e921051d6c3eed},
+  keywords = {openssl},
+  month = {April},
+  note = {\url{www.openssl.org}},
+  timestamp = {2009-01-31T03:47:33.000+0100},
+  title = {{OpenSSL}: The Open Source toolkit for {SSL/TLS}},
+  year = 2003
+}
+
+@misc{oidc, title={{OpenID} Connect Core 1.0 Authorization Code Flow},
+      url={https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth},
+      note={\url{https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth}}}
+      
+@inproceedings{eurocrypt-2023-32928,
+title={End-to-End Encrypted Zoom Meetings: Proving Security and Strengthening Liveness},
+author={Dodis, Yevgeniy and Jost, Daniel and Kesavan, Balachandar and Marcedone, Antonio},
+booktitle={Advances in Cryptology--EUROCRYPT 2023},
+year=2023,
+organization={Springer}
+}
+
+
+@misc{kyber,
+	title        = {Kyber},
+	howpublished = {Available at \url{https://pq-crystals.org/kyber/index.shtml}}
+}
+
+@misc{kybercode,
+	title        = {Kyber Software},
+	howpublished = {Available at \url{https://pq-crystals.org/kyber/software.shtml}}
+}
+
+@misc{nistpqc,
+	title        = {NIST Post-Quantum Cryptography},
+	howpublished = {Available at \url{https://csrc.nist.gov/projects/post-quantum-cryptography}}
+}
+
+@misc{xwing,
+      author = {Manuel Barbosa and Deirdre Connolly and João Diogo Duarte and Aaron Kaiser and Peter Schwabe and Karoline Varner and Bas Westerbaan},
+      title = {X-Wing: The Hybrid KEM You’ve Been Looking For},
+      howpublished = {Cryptology ePrint Archive, Paper 2024/039},
+      year = {2024},
+      note = {\url{https://eprint.iacr.org/2024/039}},
+      url = {https://eprint.iacr.org/2024/039}
+}
