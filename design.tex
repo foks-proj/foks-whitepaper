@@ -149,10 +149,10 @@ a signature over the following data:
     \item \label{item:prev} The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (which is 1 for the eldest link)
     \item A random commitment to the next tree location (see Section~\ref{sec:location-hiding})
-    \item The user's ID and the server's host ID (see Section~\ref{sec:hostchains})
-    \item \label{item:puk} The user's new PUK public key
-    \item The user's new device key
     \item The current Merkle root hash (see Section~\ref{sec:merkle})
+    \item The user's ID and the server's host ID (see Section~\ref{sec:hostchains})
+    \item \label{item:puk} The user's new PUK public keys
+    \item The user's new device key
     \item A ``subchain tree location seed commitment`` (see Section~\ref{sec:subchains})
     \item A cryptographic commitment to the user's username (see Section~\ref{sec:commitments})
     \item A cryptographic commitment to the user's device name (picked by the user)
@@ -160,18 +160,41 @@ a signature over the following data:
     \item For Yubikeys, a public ``subkey' (see Section~\ref{sec:authentication})
 \end{enumerate}
 
-The public portion of the PUK computes this signature first; then the device key
-computes a signature over the payload and the previous signature (signed with
-the PUK). The client uploads the whole package as the user's eldest link.
+The client computes nested signatures first by the new PUKs introduced in
+Step~\ref{item:puk}, and lastly by the user's device key. (Recall that sometimes
+several PUKs can be introduced at once due to the different possible device
+roles). The client uploads the whole package as the user's eldest link.
 
 Subsequent links proceed in largely the same way, with a few minor differences.
 The previous hash (\ref{item:prev}) is the collision-resistent hash of the 
-package uploaded in the previous step. New PUK public keys (\ref{item:puk}) do
-not appear on device addition; and likewise, PUK signatures are only performed when
-new PUKs are introduced, so would not be present on device addition.
+package uploaded in the previous step. In some cases, like device addition,
+new PUK public keys (\ref{item:puk}) do not appear. In these cases,
+no signatures with PUKs are required.
 
-\paragraph{Teams} 
+For any link in the chain, a set of devices is authorized to make further
+updates to the chain. After the first link, the set contains only the first
+device (sometimes called the ``eldest`` device). A link can either add a new
+device, or revoke an existing device, updating the set of authorized devices
+accordingly. When clients upload new chainlinks, the server enforces valid
+signatures by authorized devices. When users replay this chain, they perform the
+same check. This simple mechanism ensures the server can't introduce a bogus
+device.
 
+\paragraph{Teams} A team chain link contains the following fields, many of which
+are analagous to user chains:
+
+\begin{enumerate}\itemsep0em
+    \item The hash of the previous link in the chain (nil for the eldest)
+    \item The current sequence number of the sigchain (starting at 1)
+    \item A random commitment to the next tree location
+    \item The current Merkle root hash 
+    \item The team's ID and the server's host ID
+    \item New PTK public keys
+    \item \label{item:membershiip} A set of membership changes
+    \item A ``subchain tree location seed commitment``
+    \item A cryptographic commitment to the team's name
+    \item The team's ``index range'' (see~\ref{sec:team-index-range})
+\end{enumerate}
 
 \subsubsection{Hostchains}
 \label{sec:hostchains}
@@ -185,6 +208,7 @@ new PUKs are introduced, so would not be present on device addition.
 \subsubsection{Subchains}
 \label{sec:subchains}
 
+\subsubsection{Naming}
 
 \subsection{Provisioning}
 
@@ -198,6 +222,9 @@ new PUKs are introduced, so would not be present on device addition.
 \label{sec:teams}
 
 \subsubsection{Invitation Sequence}
+
+\subsubsection{Team Index Ranges}
+\label{sec:team-index-range}
 
 \subsection{Key Rotations}
 
