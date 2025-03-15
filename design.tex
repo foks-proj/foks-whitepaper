@@ -90,6 +90,7 @@ $B$'s encrypted data.
 \newcommand{\owner}{\textsf{owner}}
 \newcommand{\admin}{\textsf{admin}}
 \newcommand{\reader}{\textsf{reader}}
+\newcommand{\none}{\textsf{none}}
 \newcommand{\role}[1]{\textsf{role}(#1)}
 
 
@@ -144,7 +145,6 @@ active for the user (or team).
 the first device generates this link, generates the first PUK, and then computes
 a signature over the following data:
 
-
 \begin{enumerate}\itemsep0em
     \item \label{item:prev} The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (which is 1 for the eldest link)
@@ -192,7 +192,7 @@ are analagous to user chains:
     \item The user (or team) ID, host ID, and PUK (or PTK) of the actor making the change
        \label{item:team-actor}
     \item New PTK public keys
-    \item \label{item:membershiip} A set of membership changes
+    \item \label{item:membership} A set of membership changes
     \item A ``subchain tree location seed commitment``
     \item A cryptographic commitment to the team's name (optional if not changing)
     \item The team's ``index range'' (see~\ref{sec:team-index-range})
@@ -219,9 +219,68 @@ of these new PTKs for the \owner{} PTK of $T$. This way, everyone in the owner
 group of $T$ can now access $U$'s PTKs. The second example follows similarly,
 with the readers of $T$ getting access to $U$'s secret PTKs after team creation.
 
+The membership changes field (\ref{item:membership}) contains the following
+fields for each member being modified:
+
+\begin{enumerate}\itemsep0em
+    \item The ``destination role'': the role the member is to have in the team; for removals,
+      this is the role \none .
+      \label{item:dst-role}
+    \item The member's party and host IDs (a party ID is a user ID or a team ID).
+      \label{item:party-id}
+    \item The source role: the role the member has in its current party.
+    \item The member's public PTK or PUK from its current party.
+      \label{item:team-member-ppk}
+    \item The generation number of that PTK or PUK.
+    \item A commitment to a ``team removal key'' (see Section~\ref{sec:removal-keys})
+\end{enumerate}
+
+In the case of team creation, member addition, member role upgrade or downgrade, the
+role in field~\ref{item:dst-role} is the new role in the target team that the member
+has after the change is applied.  In the case of removal, the role is \none. 
+
+Note that in field~\ref{item:team-member-ppk}, the public PUK (or PTK) appears directly
+in the chain, in addition to the ID of that party. Admins and owners are later allowed to
+make team modifications, and these are the public keys that will sign these modifications.
+Team readers in particular might lack the permission to load the chains of these users
+and teams directly, so it's crucial the keys appear directly in the team chain. 
+See Section~\ref{sec:sigchain-viz} for further details about sigchain visibility.
+
+As alluded to above, owners have ultimate control over the team. They can add and remove
+members, add other owners, downgrade owners to admins, etc. Admins have more limited 
+control; the have similar control over admins and readers, but cannot upgrade admins
+to owners, introduce new members as owners, remove existing owners or downgrade 
+existing owners. Readers cannot make any team modifications but can of course read
+team chains, and can access data protected by the reader's PTKs at their level
+and below.
+
+Teams, unlike users, can include members located on different servers. Above, in 
+item~\ref{item:party-id}, we include the host ID of the party in the membership change.
+Remote members cannot be admins or owners, but can be readers. This configuration allows
+for convenient data sharing across federation boundaries, but simplifies team management
+relative to an alternative system where remote members can be owners or admins.
+
+Parties making changes to team sign new team chain links much the same way as users
+sign user chain links. First, all new PTKs sign the chain link, and then the acting
+party's latest PUK or PTK signs the chain link. This PUK or PTK must be the exact key
+advertised earlier in the chain in the case of link 2 and above. The eldest link
+is essentially self-signed.
 
 \subsubsection{Hostchains}
 \label{sec:hostchains}
+
+Servers maintain hostchains so they can manage and rotate their signig keys, DNS names,
+and TLS keys. Like team and user chains, hostchains form a cryptographic chain, ensuring
+they can only be replayed in the intended order, even if modified in transit. Chain links
+have sequence numbers and contain the cryptographic hashes of previous links. When an
+administrator creates a new server, they first create a \textit{hostkey}, a signing key-pair.
+This public key becomes the host's ID. The first chainlin contains this hostkey and several
+subkeys, one that serves as a TLS CA for the server, and one used to sign \textit{zonefiles}
+for the server. The \textit{zonefile} contains the DNS names for the server's various services
+(see Section~\ref{sec:foks-server}). Subsequent chainlinks can change any of these keys
+or subkeys, as long as they are signed with keys valid up until that point. clients
+play these links back to map host IDs to DNS names as they establish connections
+to new servers. 
 
 \subsubsection{Merkle Tree}
 \label{sec:merkle}
@@ -255,6 +314,7 @@ with the readers of $T$ getting access to $U$'s secret PTKs after team creation.
 \subsection{Key Rotations}
 
 \subsubsection{Removal Keys}
+\label{sec:removal-keys}
 
 \subsection{Cryptographic Primitives}
 \label{sec:cryptography}
@@ -263,7 +323,6 @@ with the readers of $T$ getting access to $U$'s secret PTKs after team creation.
 
 \subsubsection{Yubikeys}
 
-
 \subsubsection{PQ-KEM and PIV Support}
 
 \subsection{Privacy}
@@ -271,7 +330,8 @@ with the readers of $T$ getting access to $U$'s secret PTKs after team creation.
 \subsubsection{Blinding and Commitments}
 \label{sec:commitments}
 
-\subsubsection{Sigchain Visibility}
+\subsubsection{Sigchain Visibility and Permissions}
+\label{sec:sigchain-viz}
 
 \subsection{Secret Key Management}
 
