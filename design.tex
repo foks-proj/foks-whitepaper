@@ -189,10 +189,11 @@ are analagous to user chains:
     \item A random commitment to the next tree location
     \item The current Merkle root hash 
     \item The team's ID and the server's host ID
+    \item The user (or team) ID, host ID, and PUK (or PTK) of the actor making the change
     \item New PTK public keys
     \item \label{item:membershiip} A set of membership changes
     \item A ``subchain tree location seed commitment``
-    \item A cryptographic commitment to the team's name
+    \item A cryptographic commitment to the team's name (optional if not changing)
     \item The team's ``index range'' (see~\ref{sec:team-index-range})
 \end{enumerate}
 
