@@ -129,6 +129,7 @@ for an invalid device, or team administrator into encrypted data for an invalid
 user.
 
 \subsubsection{Signature Chains}
+\label{sec:sigchains}
 
 FOKS uses the same mechanism as Keybase here --- the signature chain (or sigchain for short).
 The sigchain is a series of signed statements that form a cryptographic chain, meaning they
@@ -145,10 +146,10 @@ active for the user (or team).
 the first device generates this link, generates the first PUK, and then computes
 a signature over the following data:
 
-\begin{enumerate}\itemsep0em
+\begin{enumerate}[label=A.\arabic*]\itemsep0em
     \item \label{item:prev} The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (which is 1 for the eldest link)
-    \item A random commitment to the next tree location (see Section~\ref{sec:location-hiding})
+    \item A commitment to the next random tree location (see Section~\ref{sec:location-hiding})
     \item The current Merkle root hash (see Section~\ref{sec:merkle})
     \item The user's ID and the server's host ID (see Section~\ref{sec:hostchains})
     \item \label{item:puk} The user's new PUK public keys
@@ -183,10 +184,11 @@ device.
 \paragraph{Teams} A team chain link contains the following fields, many of which
 are analagous to user chains:
 
-\begin{enumerate}\itemsep0em
+\begin{enumerate}[label=B.\arabic*]\itemsep0em
     \item The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (starting at 1)
-    \item A random commitment to the next tree location
+    \item A commitment to the next random tree location
+      \label{item:next-tree-location}
     \item The current Merkle root hash 
     \item The team's ID and the server's host ID
     \item The user (or team) ID, host ID, and PUK (or PTK) of the actor making the change
@@ -222,7 +224,7 @@ with the readers of $T$ getting access to $U$'s secret PTKs after team creation.
 The membership changes field (\ref{item:membership}) contains the following
 fields for each member being modified:
 
-\begin{enumerate}\itemsep0em
+\begin{enumerate}[label=C.\arabic*]\itemsep0em
     \item The ``destination role'': the role the member is to have in the team; for removals,
       this is the role \none .
       \label{item:dst-role}
@@ -266,6 +268,92 @@ party's latest PUK or PTK signs the chain link. This PUK or PTK must be the exac
 advertised earlier in the chain in the case of link 2 and above. The eldest link
 is essentially self-signed.
 
+\subsubsection{Sigchain Playback}
+
+Whenever a client on the time interacts with another party, or even itself, it
+begins by playing back that party's sigchain. The client connects to the party's home
+server, downloads any new links it hasn't seen, and ensures the new links play back
+cleanly on top of links it previously cached. The rules for playback are largely
+implied by the discussion above, such as:
+
+\begin{itemize}\itemsep0em
+    \item All chains start at 1, and have ascending sequence numbers.
+    \item All links should contain the hash of the previous link.
+    \item All links should have valid signatures by devices, PUKs or PTKs that the chain 
+      itself authorized. Eldest links are essentially self-signed.
+    \item The role restrictions described in Section~\ref{sec:sigchains} are obeyed in team chains.
+\end{itemize}
+
+Once playback succeeds, the client has a set of devices keys, PUKs and PTKs that can
+speak on behalf of the party. It also has rosters of devices of members who share that
+key. From here, useful application work can take over. For instance, in the case
+of file sharing (whether via Git or via a KV-store interface), a key derived from the
+most recent PUK or PTK serves as the symmetric key for authenticated encryption. 
+Whenever the PUK or PTK rotates to a new generation, future encryption should use the
+new key.
+
+\subsubsection{Merkle Tree}
+\label{sec:merkle}
+
+Section~\ref{sec:threatmodel} describes the FOKS threat model, and we assume the
+server can behave maliciously.  Sigchains prevent a server from creating new
+chainlinks out of whole cloth and interleaving those with legitimate links. The
+protection simply is that the server does not have the private keys the parties
+use for signing. We assume those never leave the devices they are made on. By these 
+mechanisms, the server cannot extend a chain or replace an inner link. The server can
+of course create a brand new chain, and might attempt clients into using this chain
+rather than the one the users intended. This case of "mistaken identity" is one
+of \textit{naming}, which we cover in Section~\ref{sec:naming}.
+
+The server can nonetheless \textit{withhold} links at the end of a chain, 
+or show some clients the full chains, and other various subchains, with the
+hope of forcing them to ``fork'' the sigchain into 2 incompatible directions.
+We need a mechanism to force the server's hand into showing a consistent 
+chain tail to all users who request it. This is where the Merkle tree
+comes in. FOKS servers expose a Merkle Tree that forces the server to commit
+to a coherent state of the system, across all parties, preventing selective
+rollback of sigchains. 
+
+FOKS uses a Merkle Tree strategy that is a hybrid of Keybase's~\cite{keybase},
+CONIK's~\cite{melara2015coniks} and SEAMLess's~\cite{chase2019seemless}, but
+with a simple novel mechanism introduced to obviate the need for pseudo-random
+functions. The Merkle tree stores each party's sigchain tail at a leaf 
+in the Merkle tree. The server computes hashes all the way up to the root node.
+The meta-root contains this tree root hash, a pointer to the previous version of
+the tree (called the previous ``epoch''), a logarithmicly-sized set of pointers
+to previous roots further back in history, and also the tail of the 
+server's hostchain (see Section~\ref{sec:hostchains}). The hash of this
+meta-root is new a summary of the entire system. The server attempts to publish
+roots immediately after every sigchain update, but sometimes batches 
+them for efficiency. In general, roots should be produced no more than
+15 seconds after a sigchain update to keep clients responsive (since sometimes
+they need to wait for updates).
+
+For the party $p$, at sequence number $i$, the leaf node is a key-value pair,
+where the key is $H(p,i,t,r_i)$, and the value is the hash of the signature of
+the last link in the sigchain (the $i$th). $t$ is an enumerated value that
+specifies which type of chain for $p$ this is. As we will see in 
+Section~\ref{sec:subchains}, each party has multiple chains.  $r_i$ is a random
+value that was generated when the $i-1$st link was published. The $i-1$st link
+contains the value $H(r_i)$ in the field~\ref{item:next-tree-location} from
+Section~\ref{sec:sigchains}. This simple mechanism achieves the same end as the
+PRF in CONIKs and SEAMLess, in that it's unpredictable in the tree where a
+team's sighcains is stored. This unpredictability prevents data leaks that would
+otherwise allow the owners of neighboring nodes in the tree to deduce when $p$'s
+chain advances. 
+
+When a client requests a sighchain for party $p$, the server returns $i+1$ paths
+down from the root of the tree, if the sigchain is $i$ links long. The first 
+$i$ point to leafs as described above, and the last is a proof that the $i+1$st 
+link does not exist. For each path, the server returns neighbors necessary
+to trace the path back to the tree root. The server also returns the sequence
+of $r_i$s, so the client can verify they match the commitments in the sigchain.
+Note the first link location is not randomized with $r_1$, since there was
+no $0$th link to commit to $r_1$. However, this link is already essentially
+random since the party's ID $p$ will appear random at the first link 
+(and then is predictable thereafter).
+
+
 \subsubsection{Hostchains}
 \label{sec:hostchains}
 
@@ -282,8 +370,6 @@ or subkeys, as long as they are signed with keys valid up until that point. clie
 play these links back to map host IDs to DNS names as they establish connections
 to new servers. 
 
-\subsubsection{Merkle Tree}
-\label{sec:merkle}
 
 \subsubsection{Location Hiding}
 \label{sec:location-hiding}
@@ -292,6 +378,9 @@ to new servers.
 \label{sec:subchains}
 
 \subsubsection{Naming}
+\label{sec:naming}
+
+\subsubsection{Revocation and Team Member Removal}
 
 \subsection{Provisioning}
 
