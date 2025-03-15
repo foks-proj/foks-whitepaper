@@ -190,12 +190,35 @@ are analagous to user chains:
     \item The current Merkle root hash 
     \item The team's ID and the server's host ID
     \item The user (or team) ID, host ID, and PUK (or PTK) of the actor making the change
+       \label{item:team-actor}
     \item New PTK public keys
     \item \label{item:membershiip} A set of membership changes
     \item A ``subchain tree location seed commitment``
     \item A cryptographic commitment to the team's name (optional if not changing)
     \item The team's ``index range'' (see~\ref{sec:team-index-range})
 \end{enumerate}
+
+Since teams can contain both users and other teams, the actor creating or
+modifying the team can be either a user or a team. In FOKS, a \textit{party}
+refefes to someone or something that can be in a team, so either a user or a
+team. In field~\ref{item:team-actor}, the link contains the unique identifier of
+the party (which is the user or team ID plus the host ID), and also the key
+making the change. For users, this key is the user's latest PUK at the \owner{}
+role.  For teams, it's the team's latest PTK at the desired source role. That
+is, consider a teams $T$  where users $a$ and $b$ are owners of $T$, $c$ is an
+admin and $d$ is a reader (at visibility level 0). If $T$ creates a new team $U$
+with source role of \owner, then only users $a$ and $b$ will have access. If
+$T$ creates the new team with source role of \reader, then all users will have
+access. 
+
+FOKS clients and servers enforce these access controls with the key hierachy.
+In the case of the owners of $T$ creating $U$, $T$'s \owner{} PTK appears in
+field~\ref{item:team-actor} and performs the signature over the chainlink. 
+As $T$ creates $U$, it makes new PTKs for $U$. It encrypts the secret keys
+of these new PTKs for the \owner{} PTK of $T$. This way, everyone in the owner
+group of $T$ can now access $U$'s PTKs. The second example follows similarly,
+with the readers of $T$ getting access to $U$'s secret PTKs after team creation.
+
 
 \subsubsection{Hostchains}
 \label{sec:hostchains}
@@ -221,6 +244,8 @@ are analagous to user chains:
 
 \subsection{Teams}
 \label{sec:teams}
+
+\subsubsection{Cross-Server Teams}
 
 \subsubsection{Invitation Sequence}
 
