@@ -329,12 +329,15 @@ them for efficiency. In general, roots should be produced no more than
 15 seconds after a sigchain update to keep clients responsive (since sometimes
 they need to wait for updates).
 
+\subsubsection{Location Hiding}
+\label{sec:location-hiding}
+
 For the party $p$, at sequence number $i$, the leaf node is a key-value pair,
 where the key is $H(p,i,t,r_i)$, and the value is the hash of the signature of
 the last link in the sigchain (the $i$th). $t$ is an enumerated value that
 specifies which type of chain for $p$ this is. As we will see in 
 Section~\ref{sec:subchains}, each party has multiple chains.  $r_i$ is a random
-value that was generated when the $i-1$st link was published. The $i-1$st link
+value that was generated when the $(i-1)$ link was published. The $(i-1)$ link
 contains the value $H(r_i)$ in the field~\ref{item:next-tree-location} from
 Section~\ref{sec:sigchains}. This simple mechanism achieves the same end as the
 PRF in CONIKs and SEAMLess, in that it's unpredictable in the tree where a
@@ -342,17 +345,17 @@ team's sighcains is stored. This unpredictability prevents data leaks that would
 otherwise allow the owners of neighboring nodes in the tree to deduce when $p$'s
 chain advances. 
 
-When a client requests a sighchain for party $p$, the server returns $i+1$ paths
-down from the root of the tree, if the sigchain is $i$ links long. The first 
-$i$ point to leafs as described above, and the last is a proof that the $i+1$st 
-link does not exist. For each path, the server returns neighbors necessary
-to trace the path back to the tree root. The server also returns the sequence
-of $r_i$s, so the client can verify they match the commitments in the sigchain.
-Note the first link location is not randomized with $r_1$, since there was
-no $0$th link to commit to $r_1$. However, this link is already essentially
-random since the party's ID $p$ will appear random at the first link 
-(and then is predictable thereafter).
-
+When a client requests a sighchain for party $p$, the server returns $(n+1)$
+paths down from the root of the tree, if the sigchain is $n$ links long. The
+first $n$ paths point to chain links 1 through $n$ as described above, and the
+last is a proof that the $(n+1)$ link does not exist. For each path, the server
+returns neighbors necessary to trace the path back to the tree root. The server
+also returns the sequence $(r_2, r_3, \dots r_{n+1})$, so the client can verify
+they match the commitments in the sigchain.  Note the first link location is not
+randomized with $r_1$, since there was no $0$th link to commit to $r_1$.
+However, the eldest link's placements is already essentially random since the
+party's ID $p$ is generately randomly at the first link (and is predictable
+thereafter).
 
 \subsubsection{Hostchains}
 \label{sec:hostchains}
@@ -370,9 +373,6 @@ or subkeys, as long as they are signed with keys valid up until that point. clie
 play these links back to map host IDs to DNS names as they establish connections
 to new servers. 
 
-
-\subsubsection{Location Hiding}
-\label{sec:location-hiding}
 
 \subsubsection{Subchains}
 \label{sec:subchains}
