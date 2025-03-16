@@ -146,7 +146,7 @@ active for the user (or team).
 the first device generates this link, generates the first PUK, and then computes
 a signature over the following data:
 
-\begin{enumerate}[label=A.\arabic*]\itemsep0em
+\begin{enumerate}[label=U.\arabic*]\itemsep0em
     \item \label{item:prev} The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (which is 1 for the eldest link)
     \item A commitment to the next random tree location (see Section~\ref{sec:location-hiding})
@@ -155,7 +155,9 @@ a signature over the following data:
     \item \label{item:puk} The user's new PUK public keys
     \item The user's new device key
     \item A ``subchain tree location seed commitment`` (see Section~\ref{sec:subchains})
-    \item A cryptographic commitment to the user's username (see Section~\ref{sec:commitments})
+      \label{item:stlsc}
+    \item A cryptographic commitment to the user's username (see Section~\ref{sec:naming})
+       \label{item:name}
     \item A cryptographic commitment to the user's device name (picked by the user)
     \item The role of the new device (currently always \owner ).
     \item For Yubikeys, a public ``subkey' (see Section~\ref{sec:authentication})
@@ -184,7 +186,7 @@ device.
 \paragraph{Teams} A team chain link contains the following fields, many of which
 are analagous to user chains:
 
-\begin{enumerate}[label=B.\arabic*]\itemsep0em
+\begin{enumerate}[label=T.\arabic*]\itemsep0em
     \item The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (starting at 1)
     \item A commitment to the next random tree location
@@ -224,7 +226,7 @@ with the readers of $T$ getting access to $U$'s secret PTKs after team creation.
 The membership changes field (\ref{item:membership}) contains the following
 fields for each member being modified:
 
-\begin{enumerate}[label=C.\arabic*]\itemsep0em
+\begin{enumerate}[label=M.\arabic*]\itemsep0em
     \item The ``destination role'': the role the member is to have in the team; for removals,
       this is the role \none .
       \label{item:dst-role}
@@ -319,15 +321,34 @@ CONIK's~\cite{melara2015coniks} and SEAMLess's~\cite{chase2019seemless}, but
 with a simple novel mechanism introduced to obviate the need for pseudo-random
 functions. The Merkle tree stores each party's sigchain tail at a leaf 
 in the Merkle tree. The server computes hashes all the way up to the root node.
-The meta-root contains this tree root hash, a pointer to the previous version of
+The \textit{root block} contains this tree root hash, a pointer to the previous version of
 the tree (called the previous ``epoch''), a logarithmicly-sized set of pointers
 to previous roots further back in history, and also the tail of the 
 server's hostchain (see Section~\ref{sec:hostchains}). The hash of this
-meta-root is new a summary of the entire system. The server attempts to publish
-roots immediately after every sigchain update, but sometimes batches 
+root block is now a summary of the entire system. The server attempts to publish
+root blocks immediately after every sigchain update, but sometimes batches 
 them for efficiency. In general, roots should be produced no more than
 15 seconds after a sigchain update to keep clients responsive (since sometimes
 they need to wait for updates).
+
+\subsubsection{Root Chaining}
+
+Since many users and teams might be active on a signle FOKS server, 
+the user has no reason to download every root Merkle epoch. Rather,
+the user will experience long gaps between epochs, especially if going
+periodically offline. Whenenever a client downloads a root block,
+say at epoch $i$, it writes it to local storage. When the client later
+downloads another root block, call it $k$, the client enforces
+that $i < k$. It also sends up the paremeter $i$, and the server
+replies with intermediate blocks $j_1, j_2 \dots j_n$, such that
+$i < j_1 < \cdots j_n < k$,  where block $j_{a}$ contains
+a pointer to $j_{a-1}$, block $j_1$ contains a pointer to $i$
+and block $k$ contains a pointer to $j_n$. The spacing of the
+previous pointers in the root block ensures than $n$ is appromixately
+$\log (k-i)$. Chaining root blocks in this way 
+encourages the server to maintain a consistent, coherent append-only
+tree. Clients should perform periodic audits of all root blocks
+to ensure previously pointer consistency across all epochs.
 
 \subsubsection{Location Hiding}
 \label{sec:location-hiding}
@@ -357,6 +378,7 @@ However, the eldest link's placements is already essentially random since the
 party's ID $p$ is generately randomly at the first link (and is predictable
 thereafter).
 
+
 \subsubsection{Hostchains}
 \label{sec:hostchains}
 
@@ -377,10 +399,79 @@ to new servers.
 \subsubsection{Subchains}
 \label{sec:subchains}
 
+\newcommand{\user}{\textsf{user}}
+\newcommand{\settings}{\textsf{settings}}
+\newcommand{\teamMembership}{\textsf{teamMembership}}
+
+\paragraph{User Settings}
+We have already seen two sigchains: the user chain and the team chain. Each of
+these chains has a subchain. Users have a \textit{user settings subchain} in
+addition to the user chain. Currently, this chains contains information about
+the user's passphrase, which can optionally be used to locally encrypt device
+keys (see Section~\ref{sec:passphrase}). Whenever the user changes her
+passphrase, she writes a new link to the chain, so that the server cannot roll
+back her passphrase information to an earlier setting.  Chain locations for
+links $i_2$ and above are computed as in the user chain itself, but with $t =
+\settings$ rather than $t = \user$.  However, the eldest link is randomized,
+since otherwise, its location in the tree is predictable given the user ID.
+
+Recall that the eldest user chain link contains a ``subchain tree location seed
+commitment``(\ref{item:stlsc}). When creating the link, the client software
+generates a random valaue $s$, and puts the hash $H(s)$ into the chain link.
+Then $r_1 = H(s, \settings)$, and the Merkle Tree stores the first link of 
+$u$'s user settings chain at location $H(u, 1, \settings, r_1)$. The server knows 
+$s$, and $u$ knows $s$, so both can compute and verify the random location of 
+the first link of the user settings chain. But other users who view $u$'s
+sigchain do not know $s$ and therefore cannot infer if $u$ has a user
+settings chain or not.
+
+\paragraph{Team Membership} Users and teams have a subchain to keep track
+of which team it is a member of. As we discuss in Section~\ref{sec:clkr},
+users need to rotate their teams from time to time based on key rotation
+events, like device revocation and removals from teams. The general strategy
+the user follows is to enumerate all teams she is transitively a member
+of (since recall teams can be members of other teams), and then check
+each team for staleness, rotating those that are stale. If this membership
+list were based purely on server trust, a malicious server could withhold
+team memberships from a user to silent suppress team rotations.\footnote{
+    A malicious server could also reject a legitimate team update, but the user's
+    software can alert the user of such a failure.
+} Instead of relying on server trust, the client software maintains a list
+of team memberships as a sigchain, which the server must faithfully
+synchronize across all of the user's devices. The tree location
+mechanism here is the same as for user chains, with $t = \teamMembership$.
+See Section~\ref{sec:removal-keys} for more information on team additions
+and removals, and how the client maintains this subchain.
+
 \subsubsection{Naming}
 \label{sec:naming}
 
-\subsubsection{Revocation and Team Member Removal}
+The server stores user and team chains at tree locations indexed by user IDs
+and team IDs respectively. These IDs are large random identitiers, and are not
+friendly to humans. Users of course need to be able to refer to these parties
+with convenient names. Morever, parties should have the ability to change
+names from time-to-time, though not too frequently, as too much churn in naming would
+complicate the user experience. 
+
+Naming in FOKS works as follows. When a user signs up, she first picks a name
+$n$, and the software later generates a random user ID $u$ that n will
+correspond to. The server stores the user ID $u$ at the Merkle Tree
+location $H(n, 1, \textsf{name}, nil)$, and the sigchain for $u$
+commits to $n$ at~\ref{item:name}. When another user loads $u$, she
+looks up the Merkle leaves at location $H(n, 1, \textsf{name}, nil)$
+and $H(n, 2, \textsf{name}, nil)$, confirming that the first location
+maps to $u$, and that the second location is absent from the tree,
+confirming the name hasn't be remapped. The loader then confirms
+that the name matches the commitment in $u$'s sigchain. 
+
+This system ensures a 1-to-1 mapping between a name $n$ and a
+user ID $u$. $u$ can later switch to a new name $n'$ by adding
+another sigchain link commiting to $n'$ that overrides the earlier
+commitment to $n$. The server can likewise later reassign $n$
+(though we currently do not allow this) by posting a new user ID
+$u'$ at tree location $H(n, 2, \textsf{name}, nil)$.
+
+Team naming works exactly the same way.
 
 \subsection{Provisioning}
 
@@ -401,12 +492,15 @@ to new servers.
 \label{sec:team-index-range}
 
 \subsection{Key Rotations}
+\label{sec:clkr}
 
 \subsubsection{Removal Keys}
 \label{sec:removal-keys}
 
 \subsection{Cryptographic Primitives}
 \label{sec:cryptography}
+
+\subsubsection{Hashing and MAC'ing}
 
 \subsubsection{Key Derivation}
 
@@ -427,5 +521,6 @@ to new servers.
 \subsubsection{Secure Enclaves}
 
 \subsubsection{Passphrase-based Management}
+\label{sec:passphrase}
 
 \subsection{Beacon Server}
