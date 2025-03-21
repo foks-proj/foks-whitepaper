@@ -475,7 +475,57 @@ Team naming works exactly the same way.
 
 \subsection{Provisioning}
 
+When users sign up for a new FOKS account, they establish a first device. They
+establish further devices via a process called ``provisioning''. In
+provisioning, an existing device signs the device key of the new device, and
+also sends it the private side of the current PUK. As we saw above, the
+signatures form a link in the sigchain. The server helps exchanged encrypted PUK
+keys as ``sidecar'' data.
+
 \subsubsection{Device-to-Device}
+
+The most complicated case is device-to-device provisioning. A user has an
+active account on device $D_1$ and uses it to directly provision device $D_2$.
+We call the existing device, $D_1$, the ``provisioner'', and the new device, $D_2$,
+the ``provisionee.''
+Device $D_2$ generates a new device key $k_2$ and prompts the user for
+a device name, which is $n_2$.
+Both devices pick random session keys, call them $s_1$ and $s_2$. Both clients
+show these keys to the user, using a simple encoding scheme we call
+``high-entropy secret phrase''. See Section~\ref{sec:hesp} for more details.
+An example might look like:\footnote{The \texttt{foks} client
+running \texttt{device assist} one-shotted this secret phrase, and I am pleasantly surprised.
+When I first used a BBS in 1990, the SYSOP (my friend's older brother) assigned me the 
+handle ``Burger Master''. I hadn't thought of this in years.}
+
+\begin{verbatim}
+    sniff 216 tilt 139 fat 230 patient 228 same 87 burger 13 master
+\end{verbatim}
+
+To initiate the key exchange protocol, either the user enters $s_2$ on device $D_1$
+or $s_1$ on device $D_2$. In both cases, the message flow is as follows, but 
+only in the first case is the first message (``start'') required:
+
+\begin{center}
+\begin{tikzpicture}[>=stealth]
+  \node (d1) at (0,6) {$D_1$};
+  \node (d2) at (6,6) {$D_2$};
+
+  \draw[->] ($(d1)+(0,-1)$) -- node[above] {[start]} ($(d2)+(0,-1)$);
+  \draw[->] ($(d2)+(0,-2)$) -- node[above] {hello: $k_2$, $n_2$} ($(d1)+(0,-2)$);
+  \draw[->] ($(d1)+(0,-3)$) -- node[above] {please sign: link $l$} ($(d2)+(0,-3)$);
+  \draw[->] ($(d2)+(0,-4)$) -- node[above] {please counter-sign: link $l$} ($(d1)+(0,-4)$);
+  \draw[->] ($(d1)+(0,-5)$) -- node[above] {done} ($(d2)+(0,-5)$);
+  
+  \draw[dashed] ($(d1)+(0,-.5)$) -- ($(d1)+(0,-5.5)$);
+  \draw[dashed] ($(d2)+(0,-.5)$) -- ($(d2)+(0,-5.5)$);
+\end{tikzpicture}
+\end{center}
+
+
+
+    
+
 
 \subsubsection{Yubikey-to-Device}
 
@@ -507,6 +557,9 @@ Team naming works exactly the same way.
 \subsubsection{Yubikeys}
 
 \subsubsection{PQ-KEM and PIV Support}
+
+\subsubsection{High-Entropy Secret Phrase}
+\label{sec:hesp}
 
 \subsection{Privacy}
 
