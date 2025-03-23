@@ -22,7 +22,7 @@ and one for personal use. Or a web browser might have different personae (with
 different cookies, preeferences, passwords and history) for the same user.
 
 Each of the users can of course have multiple devices, like a desktop, a laptop,
-a phone, and a YubiKey. Additionally, users can have "backup devices", which can
+a phone, and a \yubi . Additionally, users can have "backup devices", which can
 be writted down on paper and stored in a safe place. The system recommends at
 least two devices to prevent data loss. That is, these devices have private keys
 that decrypt data, and the loss of the last key prevents decryption of the data.
@@ -48,7 +48,7 @@ for that device. The private key never leaves the device. She shares the public 
 with the FOKS server, who eventually selectively shares it with user users.
 We detail the exact cryptography in Section~\ref{sec:cryptography}.
 
-Hardware keys that support the PIV protocol (like YubiKey version 5 and later)
+Hardware keys that support the PIV protocol (like \yubi{} version 5 and later)
 can also be used as device keys. These devices get randomly-generated private
 keys in the factory, written to one of 20 possible "slots." FOKS users select
 a slot to use, and the client sends the corresponding public key to the FOKS 
@@ -160,7 +160,7 @@ a signature over the following data:
        \label{item:name}
     \item A cryptographic commitment to the user's device name (picked by the user)
     \item The role of the new device (currently always \owner ).
-    \item For Yubikeys, a public ``subkey' (see Section~\ref{sec:authentication})
+    \item For \yubis , a public ``subkey' (see Section~\ref{sec:authentication})
 \end{enumerate}
 
 The client computes nested signatures first by the new PUKs introduced in
@@ -483,6 +483,7 @@ signatures form a link in the sigchain. The server helps exchanged encrypted PUK
 keys as ``sidecar'' data.
 
 \subsubsection{Device-to-Device}
+\label{sec:kex}
 
 The most complicated case is device-to-device provisioning. A user has an
 active account on device $D_1$ and uses it to directly provision device $D_2$.
@@ -490,7 +491,7 @@ We call the existing device, $D_1$, the ``provisioner'', and the new device, $D_
 the ``provisionee.''
 Device $D_2$ generates a new device key $k_2$ and prompts the user for
 a device name, which is $n_2$.
-Both devices pick random session keys, call them $s_1$ and $s_2$. Both clients
+Both devices pick random 125-bit session keys, call them $s_1$ and $s_2$. Both clients
 show these keys to the user, using a simple encoding scheme we call
 ``high-entropy secret phrase''. See Section~\ref{sec:hesp} for more details.
 An example might look like:\footnote{The \texttt{foks} client
@@ -503,17 +504,16 @@ handle ``Burger Master''. I hadn't thought of this in years.}
 \end{verbatim}
 
 To initiate the key exchange protocol, either the user enters $s_2$ on device $D_1$
-or $s_1$ on device $D_2$. In both cases, the message flow is as follows, but 
-only in the first case is the first message (``start'') required:
+or $s_1$ on device $D_2$. In both cases, the message flow is as follows:
 
 \begin{center}
 \begin{tikzpicture}[>=stealth]
-  \node (d1) at (0,6) {$D_1$};
-  \node (d2) at (6,6) {$D_2$};
+  \node (d1) at (0,6) {$D_1$ (provisioner)};
+  \node (d2) at (6,6) {$D_2$ (provisionee)};
 
   \draw[->] ($(d1)+(0,-1)$) -- node[above] {[start]} ($(d2)+(0,-1)$);
   \draw[->] ($(d2)+(0,-2)$) -- node[above] {hello: $k_2$, $n_2$} ($(d1)+(0,-2)$);
-  \draw[->] ($(d1)+(0,-3)$) -- node[above] {please sign: link $l$} ($(d2)+(0,-3)$);
+  \draw[->] ($(d1)+(0,-3)$) -- node[above] {please sign: link $l$, token $t$} ($(d2)+(0,-3)$);
   \draw[->] ($(d2)+(0,-4)$) -- node[above] {please counter-sign: link $l$} ($(d1)+(0,-4)$);
   \draw[->] ($(d1)+(0,-5)$) -- node[above] {done} ($(d2)+(0,-5)$);
   
@@ -522,14 +522,57 @@ only in the first case is the first message (``start'') required:
 \end{tikzpicture}
 \end{center}
 
+The first message, ``start'', is optional and only needed in the case that $s_2$
+is entered on device $D_1$. In the ``hello'' message, the provisionee sends its
+new key and desired device name over to the provisioner. The provisioner then
+makes a sigchain link, $l$, and in the ``please sign'' message, asks the
+provisionee to sign it with $k_2$, the new device key. The provisoner also
+includes token $t$ so the provisionee can load the user's sigchain from the
+server. In the ``please counter-sign'' message, the provisionee returns the
+signed link and asks the provisioner sign it a second time with $k_1$, $D_1$'s
+device key. Finally, the provisioner can post the new signed sigchain link $l$
+to the server, including encryption of the latest PUK for $k_2$ with $l$. Once
+the provisionee receives the ``done'' message, it can load the user's PUKs from
+the server, and decrypt them with $k_2$.
 
+Though messages between $D_1$ and $D_2$ could use interesting local peer-to-peer
+protocols, we employ a simpler, more reliable strategy. The FOKS server proxies
+all of these messages. One device sends a message, while the other polls for the
+next message in the sequence. Let $s^{*}$ be the session key that was input on
+the other device. Both devices encrypt all messages send to the server with the
+session key $s^{*}$, using authenticated encryption.
 
-    
+Some researchers~\cite{ncc2019} have suggested using a passphrase-authenticated
+key exchange (PAKE) rather than this simple $s_1$ / $s_2$ mechanism. The
+observation is that the secret phrases, which users have to type until
+smart-phone apps are built, are quite long and could be much shorter with PAKEs.
+We considered these constructions but rejected them for FOKS, since we are
+concerned the PAKEs can be easily DOSed. That is, the provisionee $D_2$ is not
+authenticated to the server since the user hasn't logged in on $D_2$ yet; this
+login happens naturally as a result of the provisioning process. Thus, there is
+nothing to stop an attacker from targeting a user and entering bad PAKE codes
+before the legimiate user can enter the correct code. Such an attack would not
+break the integrity of the protocol, but could prevent the user from ever
+successfully provisioning.
 
+Note that several of these provisioning sessions can happen concurrently on the
+same the server. $D_1$ and $D_2$, with the server's assistance, must separate
+their messages from other currently active clients.  They therefore tag each
+message in the exchange with the channel identifier $H(s^{*})$, where $H$ is a
+one-way function like SHA2. This channel identifier is unguessable for 
+any malicious clients who do not know $s^{*}$, and will clearly be unique
+across all device pairs.
 
-\subsubsection{Yubikey-to-Device}
+\subsubsection{\Yubi -to-Device and Device-to-\Yubi }
 
-\subsubsection{Device-to-Yubikey}
+Most of the protocol in Section~\ref{sec:kex} can be skipped in the case
+of either provisioning a regular device (a computer or a phone) with a \yubi ,
+or vice versa. No communication needs to bounce off the server, as the device
+and the \yubi{} can comunicate directly via the local machine. The crux of 
+the protocol, however, remains. For a \yubi{} provisioning a new device,
+the device makes the new link, the device signs the link, and the \yubi{} 
+countersigns it. Then the device posts the link (and encrypted PUK keys)
+to the server. And vice-versa for a device adding a new \yubi . 
 
 \subsection{Teams}
 \label{sec:teams}
@@ -554,7 +597,7 @@ only in the first case is the first message (``start'') required:
 
 \subsubsection{Key Derivation}
 
-\subsubsection{Yubikeys}
+\subsubsection{\Yubis}
 
 \subsubsection{PQ-KEM and PIV Support}
 
