@@ -131,12 +131,13 @@ user.
 \subsubsection{Signature Chains}
 \label{sec:sigchains}
 
-FOKS uses the same mechanism as Keybase here --- the signature chain (or sigchain for short).
-The sigchain is a series of signed statements that form a cryptographic chain, meaning they
-can only be replayed in the intended order. Replaying the chain allows a viewer to
-confirm the chain appears how the author intended and wasn't tampered with, even if
-the set of signers varies over time. Of course, signers do vary over time as
-users add and remove devices, or as they add and remove members from teams.
+FOKS uses the same mechanism as Keybase here --- the signature chain (or
+``sigchain'' for short).  The sigchain is a series of signed statements that
+form a cryptographic chain, meaning they can only be replayed in the intended
+order. Replaying the chain allows a viewer to confirm the chain appears how the
+author intended and wasn't tampered with, even if the set of signers varies over
+time. Of course, signers do vary over time as users add and remove devices, or
+as they add and remove members from teams.
 
 Each user (and team) gets its own sigchain. The sigchain keeps an indellable record
 of which keys can update the chain, and which PUKs or PTKs are currently
@@ -252,8 +253,8 @@ See Section~\ref{sec:sigchain-viz} for further details about sigchain visibility
 
 As alluded to above, owners have ultimate control over the team. They can add and remove
 members, add other owners, downgrade owners to admins, etc. Admins have more limited 
-control; the have similar control over admins and readers, but cannot upgrade admins
-to owners, introduce new members as owners, remove existing owners or downgrade 
+control; the have similar control over admins and readers, but cannot: upgrade admins
+to owners, introduce new members as owners, remove existing owners; or downgrade 
 existing owners. Readers cannot make any team modifications but can of course read
 team chains, and can access data protected by the reader's PTKs at their level
 and below.
@@ -264,7 +265,7 @@ Remote members cannot be admins or owners, but can be readers. This configuratio
 for convenient data sharing across federation boundaries, but simplifies team management
 relative to an alternative system where remote members can be owners or admins.
 
-Parties making changes to team sign new team chain links much the same way as users
+Parties making changes to team sign new team chain links much the same way as user devices
 sign user chain links. First, all new PTKs sign the chain link, and then the acting
 party's latest PUK or PTK signs the chain link. This PUK or PTK must be the exact key
 advertised earlier in the chain in the case of link 2 and above. The eldest link
@@ -577,12 +578,63 @@ to the server. And vice-versa for a device adding a new \yubi .
 \subsection{Teams}
 \label{sec:teams}
 
+We covered much of how teams work in Section~\ref{sec:sigchains}, largely by
+analogy to users and devices. There are, however, some important differences,
+which we cover here in more detail.
+
 \subsubsection{Cross-Server Teams}
 
-\subsubsection{Invitation Sequence}
+As described in Section~\ref{sec:sigchains}, teams are composed of parties
+that can span multiple federated servers. A team has a home server, which 
+hosts its public keys, encrypted secret keys, sigchain, and Merkle Tree.
+An importantly, all the admins and owners --- those who have the ability
+to change the team --- must be on the same home server. However, team readers
+can join the team from across the Internet.
 
-\subsubsection{Team Index Ranges}
+Because readers can be local or remote, important team protocols, like addition
+and removal, must work with more generality, as we cannot assume that the reader
+and the team have the same home server. Morever, we cannot assume much
+cooperation among independently administered servers under our thread model
+(see Section~\ref{sec:threatmodel}).
+
+\subsubsection{Cycle Avoidance}
 \label{sec:team-index-range}
+
+One problem in particular the presents itself immediately: potential cycles.
+Imagine a simple case, with three hosts $h_1$, $h_2$ and $h_3$, and three teams
+on those host, respectively, $t_1$, $t_2$ and $t_3$. If $t_1$ adds $t_2$ as a
+reader, $t_2$ adds $t_3$ as a reader, and $t_3$ adds $t_1$ as a reader, there is
+now a cycle in the team membership graph. That cycles are bad is not immediately
+obvious, but we must consider what happens in a rekey scenario.
+
+Imagine at the start of the sequence, team $t_1$ consists of two owners --- call
+then $u$ and $v$ --- and no other members. Team $t_2$ consists of a single owner
+$x$, and team $t_3$ consists a single owner $y$. Focus on user $v$, who will
+eventually be removed.  At the start $v$ has access to $t_1$'s reader PTK at
+generation 1, call it $k^{1}_{1}$.  Next, $x$ adds the readers of $t_1$ to $t_2$
+as readers. As a result, $v$ gets access via $k_1^{1}$ to $t_2$'s reader PTK,
+call it $k_2^{1}$. Next, user $y$ adds the readers of $t_2$ to $t_3$ as readers,
+giving $v$ access to $t_3$'s PTK $k_3^{1}$ transitively via $k_1^1$ and $k_2^1$.
+Finally, $u$ completes the cycle, adding the readers of $t_3$ to $t_1$ as readers.
+
+Everything up until now is working as planned, but now consider what happens when
+$u$ removes $v$ from $t_1$. What should happen is that all 3 teams should 
+rotate so that $v$ loses access to their most recent reader PTKs.
+
+
+
+
+
+In the case of an cyclic team graph,
+unfortunately, there is no ``fixed point'' during rekeying. $t_1$, $t_2$ and
+$t_3$ can rotate keys indefinitely without getting to a configuration in which a
+removed party doesn't have access to new keys. See
+Section~\ref{sec:removal-keys} for more details.
+
+
+
+
+\subsubsection{Invitation Sequence}
 
 \subsection{Key Rotations}
 \label{sec:clkr}
