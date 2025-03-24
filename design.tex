@@ -616,21 +616,92 @@ as readers. As a result, $v$ gets access via $k_1^{1}$ to $t_2$'s reader PTK,
 call it $k_2^{1}$. Next, user $y$ adds the readers of $t_2$ to $t_3$ as readers,
 giving $v$ access to $t_3$'s PTK $k_3^{1}$ transitively via $k_1^1$ and $k_2^1$.
 Finally, $u$ completes the cycle, adding the readers of $t_3$ to $t_1$ as readers.
+Figure~\ref{fig:cycle1} shows this initial configuration. 
+
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[->, thick, auto, node distance=2.5cm]
+        \node (k1) {$k_1^1$};
+        \node (k2) [right of=k1] {$k_2^1$};
+        \node (k3) [below of=k1] {$k_3^1$};
+      
+        \draw (k1) to (k2);
+        \draw (k2) to (k3);
+        \draw (k3) to (k1);
+      \end{tikzpicture}
+    \caption{The initial configuration of teams $t_1$, $t_2$ and $t_3$.
+A link from $k$ to $j$ means that knowing $k$ gives one access to $j$, i.e., that $k$ is a reader of $j$.}
+    \label{fig:cycle1}
+\end{figure}
+
 
 Everything up until now is working as planned, but now consider what happens when
 $u$ removes $v$ from $t_1$. What should happen is that all 3 teams should 
-rotate so that $v$ loses access to their most recent reader PTKs.
+rotate so that $v$ loses access to their most recent reader PTKs. But in practice, this
+objective cannot be achieved. Playing out the scenario, $u$ rotates $t_1$'s reader PTK
+from $k_1^1$ to $k_1^2$. It encrypts $k_1^2$ for $k_1^1$ so that the remaining 
+members can still access old data. It also encrypts $k_1^2$ for $t_2$'s most recent reader
+PTK, which remains $k_2^1$. See Figure~\ref{fig:cycle2} for what this new configuration looks like.
+One thing to notice immeidately is that any node on the graph is reachable from any other. That is,
+if user $v$ knows $k_1^1$ (which he had access to before $u$ removed him), then he can still
+decrypt any other key on the graph, including $k_1^2$, which he reach via
+$k_1^1 \rightarrow k_2^1 \rightarrow k_3^1 \rightarrow k_1^2$. So in a deep sense, the 
+rotation has failed. 
 
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[->, thick, auto, node distance=2.5cm]
+        \node (k1) {$k_1^1$};
+        \node (k2) [right of=k1] {$k_2^1$};
+        \node (k3) [below of=k1] {$k_3^1$};
+        \node (k12) [left of=k1] {$k_1^2$};
+      
+        \draw (k1) to (k2);
+        \draw (k2) to (k3);
+        \draw (k3) to (k1);
+        \draw (k12) to (k1);
+        \draw (k3) to (k12);
 
+      \end{tikzpicture}
+    \caption{After $u$ removes $v$ from $t_1$ and rotates $t_1$'s reader PTK to $k_1^2$.}
+    \label{fig:cycle2}
+\end{figure}
 
+To continue a few more steps, assume $t_2$ rotates, and then $t_3$ rotates. See Figure~\ref{fig:cycle3}.
+for the new configuration. The problem remains. Any node in the graph is reachable from any other,
+and therefore, $v$ can still access the new PTKs for all teams. We can generalize (without proof)
+that there is no ``fixed point'' during this decentralized key rotation process, and that no amount
+of rotation will lock $v$ out of the teams. A different system in which $t_1$, $t_2$ and $t_3$
+rotated simultaneously might avoid this problem, but we see no robust way for them to do so 
+if those teams reside on independent servers.
 
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}[->, thick, auto, node distance=2.5cm]
 
-In the case of an cyclic team graph,
-unfortunately, there is no ``fixed point'' during rekeying. $t_1$, $t_2$ and
-$t_3$ can rotate keys indefinitely without getting to a configuration in which a
-removed party doesn't have access to new keys. See
-Section~\ref{sec:removal-keys} for more details.
+        \node (k1) {$k_1^1$};
+        \node (k2) [right of=k1] {$k_2^1$};
+        \node (k3) [below of=k1] {$k_3^1$};
+        \node (k12) [left of=k1] {$k_1^2$};
+        \node (k22) [above of=k2] {$k_2^2$};
+        \node (k32) [below of=k3] {$k_3^2$};
+      
+        \draw (k1) to (k2);
+        \draw (k2) to (k3);
+        \draw (k3) to (k1);
+        \draw (k12) to (k1);
+        \draw (k3) to (k12);
 
+        \draw (k12) to (k22);
+        \draw (k22) to (k2);
+
+        \draw[bend left=45] (k22) to (k32);
+        \draw (k32) to (k3);
+
+      \end{tikzpicture}
+    \caption{After $u$ removes $v$, $t_1$ rotates, then $t_2$ rotates, and finally $t_3$ rotates.}
+    \label{fig:cycle3}
+\end{figure}
 
 
 
