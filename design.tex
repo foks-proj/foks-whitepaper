@@ -827,14 +827,17 @@ different platform, like a secure team chat.
 If $p$ decides to accept this invitation, there are four subcases to consider:
 
 \begin{enumerate}
-    \item $p$ is a user, and $p$ and $t$ are on the same server. Here, the user $p$
+\item $p$ is a user, and $p$ and $t$ are on the same server.
+%
+Here, the user $p$
 instructs her home server to allow the owners and administrators of $t$ to allow
 access to her sigchain. The server makes a quick note in the database to honor
 future accesses. Then $p$ writes a link to its Team Membership Chain (see Section~\ref{sec:subchains}) 
 saying it accepted an invitation to team $t$.
 \label{case:user-user-local}
 
-    \item $p$ is a user, and $p$ and $t$ are on different servers.
+\item $p$ is a user, and $p$ and $t$ are on different servers.
+%
 User $p$ contacts its home server and asks that it assue a new 
 ``remote view permission token'' for the administratos and owners of $t$.
 The server sends back this token. $p$ encrypts this token with the PTK
@@ -845,7 +848,13 @@ $p$ writes a link to its Team Membership Chain saying it accepted an invitation
 to $t$. It also informs $t$'s server that it has accepted the invitation.
 \label{case:user-user-remote}
 
-    \item $p$ is a team, and $p$ and $t$ are on the same server.
+\item $p$ is a team, and $p$ and $t$ are on the same server. 
+% 
+The actor here is an an administrator or owner of team $p$. He firsts does a
+cycle check, checking that the index range of $p$ is less than that of $t$.
+The serer would reject the addition of $p$ otherwise.
+    
+    
     \item $p$ is a team, and $p$ and $t$ are on different servers.
 \end{enumerate}
 
