@@ -778,9 +778,10 @@ First, the administrator creates a team certificate with the fields:
 \begin{itemize}[noitemsep]
     \item The team's ID
     \item The team's Host ID
-    \item The team's current public key
+    \item The team's current admin PTK
     \item The current time
     \item The name of the team
+    \item The team's index range
 \end{itemize}
 %
 The adminstrator then signs this certificate payload with both the current PTK, 
@@ -800,6 +801,53 @@ Which is small enough to exchange via group text chat.
 
 
 \paragraph{Accepting Invitations}
+
+Once a party $p$ receives the invitation to team $t$ ($p$ can be a user or a
+user acting on behalf of a team), it breaks the token into its two parts, the
+host ID and the certificate hash. It maps the host ID to a DNS name (see
+Section~\ref{sec:beacon}), and then asks the server for the preimage of the hash
+from the invitation. It checks that the preimage hashes correctly, and then
+opens the certificate. From here, it checks the signatures described just above.
+Note that at this point, $p$ is not a member of the team, so cannot read the
+team's sigchain. 
+
+There is therefore an oppoortunity for the team certificate to be partially
+forged. $p$ can check that that first PTK corresponds to the team ID, so
+therefore knows that whoever generated this certificate was at one time a team
+admin.  But that administrator might have been removed from the team. Also, the
+name of the team cannot be checked against the Merkle Tree, so the team's name
+might be forged. Eventually, once $p$ is admitted into the team, it can check
+that these fields are correct, and leave the team if not.  By accepting the
+invitation, be it malicious or otherwise, $p$ is primarily giving access to
+reading its sighcain. It must decide whether or not this is a good idea on the
+basis of who sent the team invitation in the first place. This problem can
+recursively be solved in FOKS, by a different team, or by trusted channel on a
+different platform, like a secure team chat.
+
+If $p$ decides to accept this invitation, there are four subcases to consider:
+
+\begin{enumerate}
+    \item $p$ is a user, and $p$ and $t$ are on the same server. Here, the user $p$
+instructs her home server to allow the owners and administrators of $t$ to allow
+access to her sigchain. The server makes a quick note in the database to honor
+future accesses. Then $p$ writes a link to its Team Membership Chain (see Section~\ref{sec:subchains}) 
+saying it accepted an invitation to team $t$.
+\label{case:user-user-local}
+
+    \item $p$ is a user, and $p$ and $t$ are on different servers.
+User $p$ contacts its home server and asks that it assue a new 
+``remote view permission token'' for the administratos and owners of $t$.
+The server sends back this token. $p$ encrypts this token with the PTK
+it received in the team's certifcate, and then posts this encryption to
+$t$'s home server. Note that $p$ isn't trusting the server's administrators 
+here, so does not send this token in plaintext. As with the above case,
+$p$ writes a link to its Team Membership Chain saying it accepted an invitation
+to $t$. It also informs $t$'s server that it has accepted the invitation.
+\label{case:user-user-remote}
+
+    \item $p$ is a team, and $p$ and $t$ are on the same server.
+    \item $p$ is a team, and $p$ and $t$ are on different servers.
+\end{enumerate}
 
 \paragraph{Admitting into Teams}
 
@@ -840,3 +888,4 @@ Which is small enough to exchange via group text chat.
 \label{sec:passphrase}
 
 \subsection{Beacon Server}
+\label{sec:beacon}
