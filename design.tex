@@ -754,12 +754,55 @@ than $t_2$'s.
 All teams get the initial default range of $[1,\infty)$. When a team administrator
 seeks to add one team to another, she might need to change one or both of the team's
 ranges. For instance, take teams $t_1$ and $t_2$, both at the default range $[1,\infty)$.
-To add $t_1$ to $t_2$ as a reader, the administrator can reduce $t_1$'s range to $[1, 0x80)$
-and team $t_2$'s range to $[0x80, \infty)$. Now the property above is upheld,
-since $[1,0x80) < [0x80, \infty)$.  Note that it still remains possible to add $t_2$ to 
+To add $t_1$ to $t_2$ as a reader, the administrator can reduce $t_1$'s range to $[1, 128)$
+and team $t_2$'s range to $[128, \infty)$. Now the property above is upheld,
+since $[1,128) < [128, \infty)$.  Note that it still remains possible to add $t_2$ to 
 another team or to add another team to $t_1$ by making appropriate range reductions.
 
 \subsubsection{Invitation Sequence}
+
+By default, two parties $p$ and $q$ cannot view each other's sigchains, even if on the same
+server. But $p$ must be able to read $q$'s sigchain in order to compute its current
+PUKs or PTKs if adding $q$ to a team. So a protocol must be invented to allow $p$ and $q$
+to exchange information before the actual join process occurs. There are three general
+steps: (1) $p$ creates a multi-use invitation token, which $p$ can share with one or
+more parties; this invitation exposes the team's name, host and ID to all invitees; 
+(2) $q$ ``accepts'' this invitation, thereby granting $p$ access to its sigchain;
+and (3) $p$ ``admits`` $q$ into the team.
+
+\paragraph{Invite Tokens}
+
+A team's administrator or owner can create a multi-use invitation token for a team $t$.
+First, the administrator creates a team certificate with the fields:
+
+\begin{itemize}[noitemsep]
+    \item The team's ID
+    \item The team's Host ID
+    \item The team's current public key
+    \item The current time
+    \item The name of the team
+\end{itemize}
+%
+The adminstrator then signs this certificate payload with both the current PTK, 
+and also the original PTK, whose hash is the team's ID.  If the PTK hasn't rotated,
+then of course only one signature suffices. In totality, the above data and the signatures
+are quite large, so we introduce one layer of indirection to make them shorter. 
+The administrator posts the signed certificate it's home server, and then formulates
+an invitattation as: (1) the hash of the above data; and (2) the host's ID. The
+resulting token can look something like this:
+%
+\begin{verbatim}
+    YcarI5JTMAVDHG47cb5l1Pp87COqmK6nzf6h12hchVLMMjlplmjC5dky
+    wwnqlOhuakWkAjzO2zJ6BtxrnOxdZV8NyLby2r16MhCvC
+\end{verbatim}
+% 
+Which is small enough to exchange via group text chat.
+
+
+\paragraph{Accepting Invitations}
+
+\paragraph{Admitting into Teams}
+
 
 \subsection{Key Rotations}
 \label{sec:clkr}
