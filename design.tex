@@ -703,6 +703,31 @@ if those teams reside on independent servers.
     \label{fig:cycle3}
 \end{figure}
 
+The simplest path forward is to disallow cycles in the global team
+graph, which seems like a natural constraint. However, enforcing
+lack of cycles globally is challenging, and seems to require some
+concept of global locks across the internet. To see why, consider
+four teams, $t_1$, $t_2$, $t_3$ and $t_4$, on four different servers.
+First, $t_1$ adds $t_2$ as a reader, and $t_3$ adds $t_4$ as a reader.
+So far so good. If $t_2$ adds $t_3$ as a reader, or $t_4$ adds
+$t_1$ as a reader, we still are cycle-free.  But if the two additions
+happen roughly simultaneously, a cycle is formed, and there is no easy
+way for any of the hosts involves to detect it.
+
+The most blunt and naive solution is for each team to get an ``index'', which
+which is simply a natural number. This index cannot change once assigned, and
+$t_1$ can only add $t_2$ iff $t_2$'s index is less than $t_1$'s. This simple
+rule prevents cycles, but is inflexible and doesn't allow much play in the team
+graph as the system evolves. FOKS opts for a slightly more flexible solution of
+a similar flavor. Each team gets a ``range'' of possible index values,
+representing bounds on where the team's index will eventually settle.  This
+range in practice is an interval on the positive rational numbers, of the form
+$[a,b)$, where $a,b \in \mathbb{Q^{+}}$. $b$ can take on the special value $\infty$.
+A team can always restrict its range but can never expand it. The rule for
+addition then becomes that $t_1$ can add $t_2$ iff the lower bound of $t_1$'s
+range is greater than the upper bound of $t_2$'s range. The rule guarantees that
+whereever $t_1$ and $t_2$'s indices eventually settle, $t_1$'s index is greater
+than $t_2$'s.  Teams get the initial default range of $[1,\infty)$.
 
 
 \subsubsection{Invitation Sequence}
