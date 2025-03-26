@@ -852,13 +852,40 @@ to $t$. It also informs $t$'s server that it has accepted the invitation.
 % 
 The actor here is an an administrator or owner of team $p$. He firsts does a
 cycle check, checking that the index range of $p$ is less than that of $t$.
-The serer would reject the addition of $p$ otherwise.
+The server would reject the addition of $p$ otherwise. The admin/owner now
+operates analogously to Case~\ref{case:user-user-local}.  First, he
+instructs the server to allow the admins of $t$ to read $p$'s sigchain.
+Then, he posts a link to $p$'s Team Membership Chain saying that it has
+accepted an invitation to $t$.
+\label{case:team-team-local}
     
-    
-    \item $p$ is a team, and $p$ and $t$ are on different servers.
+\item $p$ is a team, and $p$ and $t$ are on different servers.
+%
+This case is a hybrid of Cases~\ref{case:user-user-remote} and~\ref{case:team-team-local}.
+As in Case~\ref{case:team-team-local}, the actor first performs a cycle check.
+As in Case~\ref{case:user-user-remote}, the actor makes a new review view token
+for $p$ and posts it to $t$'s home server. Then it writes a link to $p$'s
+Team Membership Chain as above.
+\label{case:team-team-remote}
+
 \end{enumerate}
 
 \paragraph{Admitting into Teams}
+
+For a given team $t$, the owners and administrators see an inbox of pending
+accepted invitations. For each of these, the administratos makes a yes/no
+decision as to whether the team can be admitted into the team, and also what
+it's role should be in the new team. Recall some restrictions on these roles: 
+(1) remote parties can only be readers; and (2) administrators cannot add new
+members to teams as owners. In any of the four subcases above, the administrator
+gets the necessary access to play the accepted party's sigchain; as such,
+he can put their latest PUK or PTK into the sigchain, and can encrypt
+$t$'s latest PTK for that PUK or PTK.
+
+Once the party is admitted into the team, it can sign a statement with its PTK
+or PUK to play the team's sigchain. When it does that for the first time, it
+updates its Team Memership Chain to show that the accepted invite transitioned
+to an official admittance. 
 
 
 \subsection{Key Rotations}
