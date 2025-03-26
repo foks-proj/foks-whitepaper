@@ -887,9 +887,51 @@ or PUK to play the team's sigchain. When it does that for the first time, it
 updates its Team Memership Chain to show that the accepted invite transitioned
 to an official admittance. 
 
-
 \subsection{Key Rotations}
 \label{sec:clkr}
+
+PTKs must be rotated in two important cases: (1) when a party is removed from a team; and (2)
+when a member rotates their PTK or PUK. The first case is straightforward, and happens
+when the administrator performs the removal. In such a case, the adminstrator (or owner)
+posts a new link to the team's sigchain with the role of \none{} for the affected party.
+The link also contains the new PTKs for the team. The administator also includes
+new encryption of these PTKs for the remaining members of the team.
+
+The trickier case is the second, since the rotations happen asynchronously. Say
+that user $u$ is a member of team $t_1$ which is in turn a member of team $t_2$.
+Now say user $u$ revokes a device, mayb because it was lost or stolen. Upon
+revocation, his PUKs will rotate. Eventually the PTKs for $t_1$ must rotate,
+which will eventually trigger a rotation for $t_2$. But there are several
+reasons these rotates might not be immediate. Perhaps all the relevant
+adminstrators (who are authorized to perform the rotations) are offline. Or
+maybe $t_1$ or $t_2$ is hosted on a different server which is currently offline
+for maintenance. Since it is clear that some cascading team key rotations must
+be done asynchronously, we simplify the FOKS systems by having \textit{all} team
+rotations happen asynchronously along the same code paths.
+
+Every FOKS clients polls all reachable teams in a background loop. It starts 
+with teams in the user's team membership chain, then recursively loads all teams
+and their associated membership chains, in a breadth-first manner.  For each
+team encountered where the user can act as an administrator, either directly or
+via a team, it checks that all PTKs and PUKs in the team chain are up-to-date.
+If it finds one that is behind for any member, it will rotate necessary PTKs so
+they are encrypted for the member's latest keys. Rekeying starts with teams
+that have the lowest index ranges, and moves upwards, so that cascaing rekeys
+happen in the right order.
+
+If there are multiple administrators or owners for teams, there is no explicit
+coordination. Rather, they in effect race to rekey the same teams.  However, the
+FOKS client adds randomness into the traversal order where possible, and
+randomness into the timing, so chances of collisions are low. If they do happen,
+the loser of the race will fail to update the team chain (as enforced by the
+server), will reload the team, and then see it no longer needs to rekey.
+
+Note the importance of the Team Membership Chains in this protocol. The
+users should not trust the servers to faithfully recount to them which
+teams they are members of; if they did, dishonest servers could silently
+supress team rotation through omission. Instead, the Merkle Tree and sigchain
+append-only properties give users guarantees that servers aren't tampering
+with their view of team memberships.
 
 \subsubsection{Removal Keys}
 \label{sec:removal-keys}
