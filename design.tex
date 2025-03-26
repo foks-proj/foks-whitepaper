@@ -760,6 +760,7 @@ since $[1,128) < [128, \infty)$.  Note that it still remains possible to add $t_
 another team or to add another team to $t_1$ by making appropriate range reductions.
 
 \subsubsection{Invitation Sequence}
+\label{sec:invitation}
 
 By default, two parties $p$ and $q$ cannot view each other's sigchains, even if on the same
 server. But $p$ must be able to read $q$'s sigchain in order to compute its current
@@ -887,7 +888,7 @@ or PUK to play the team's sigchain. When it does that for the first time, it
 updates its Team Memership Chain to show that the accepted invite transitioned
 to an official admittance. 
 
-\subsection{Key Rotations}
+\subsubsection{Team Key Rotations}
 \label{sec:clkr}
 
 PTKs must be rotated in two important cases: (1) when a party is removed from a team; and (2)
@@ -931,10 +932,46 @@ users should not trust the servers to faithfully recount to them which
 teams they are members of; if they did, dishonest servers could silently
 supress team rotation through omission. Instead, the Merkle Tree and sigchain
 append-only properties give users guarantees that servers aren't tampering
-with their view of team memberships.
+1Gwith their view of team memberships.
+
+Also note that to perform this ongoing key rotation process, all team
+administrators need ongoing access to the sigchain of team's members. Thus, the
+access tokens and permissions exchanged as part of the team invitation process
+(see Section~\ref{sec:invitation}) persist in the team as long as mebmers
+remain.
 
 \subsubsection{Removal Keys}
 \label{sec:removal-keys}
+
+When users are removed from teams, they should no longer be able to load the team's
+sigchain. But what's to stop a server from falselyclaiming the user was removed, thereby 
+preventing the user from rotating the team as described in Section~\ref{sec:clkr}?
+We here discuss ``Team Removal Keys'', which allow a team administrator to prove
+to a removed team member that they were legitimately removed, rather than falsely
+removed as a malicious server might claim.
+
+Recall from Section~\ref{sec:sigchains} that when administrator add members to
+teams, they include for each member a commitment to a ``team removal key''. Here
+is where this mechanism comes into play. The team removal key is a 32-byte
+random value, generated anew for each member added to the team. When adding
+member $p$ to the team, the administrator encrypts this removal key for the
+other administrators for the team, and also for $p$'s PTK (or PUK, depending if
+$p$ is a user or a team). The administrator puts both ciphertexts to the server,
+and writes a commitment to this key into the sigchain link. When $p$ loads the 
+team and plays the sigchain, it writes down this commitment to a local database.
+
+Later, when an administator removes $p$ from the team, $p$ will fail to load
+new chainlinks from the team, though it should still keep existing chainlinks
+in its cache. It can now demand ``proof'' from the server that its removal
+was legitimate. If indeed it was, the server will send down the ciphertext
+computed at addition time, and $p$ can decrypt it. It can check this key
+against the commitment in the team chain that it has written to a local database.
+It can further check that the administrator MAC'ed a statement with this
+key, stating that $p$ was removed from the team and the time of the removal.
+If the decryption of the key fails, or if the key does not match the commitment
+in the team chain, or if the MAC of the removal statement fails, the software
+can post a warning to the user's client, saying that it suspects some form
+of server tampering.
 
 \subsection{Cryptographic Primitives}
 \label{sec:cryptography}
