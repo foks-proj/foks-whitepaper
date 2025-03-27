@@ -973,8 +973,109 @@ in the team chain, or if the MAC of the removal statement fails, the software
 can post a warning to the user's client, saying that it suspects some form
 of server tampering.
 
+Members $p$'s team removal key is not rotated when $p$ rotates their PTK or PUK;
+nor is it rotated when the admins or owners of the team change. Lack of rotation
+opens the window for an attack; a malicious server collaborating with an
+attacker who gains access to a stolen device can recover the team removal key
+and make a false statement that $p$ has been removed from the team. Though it is 
+possible to replace and rotate team removal keys when member PTKs or PUKs change,
+such rotations create new challenges. If members fall behind the latest
+team removal keys and then are removed, they will have no commitment to 
+compare the new removal key against, preventing the protocol from workking.
+We believe the correct trade-off is to keep the original team removal key
+despite other rotations.
+
+\section{Cryptographic Design}
+
+Here we describe the important cryptographic decisions at play in the FOKS
+system.  For the most part, our bias is toward simplicity and boring,
+failure-proof cryptography.  For instance, as decribed in
+Section~\ref{sec:merkle}, we use a vanilla collision-resistant hash function to
+hide tree locations, rather than the slightly more exotic pseudo-random function
+approach. The emphasis throughout is on tried-and-true cryptography that will
+prove as robust as possible to misuse through software bugs.
+
+\subsection{The Snowpack Domain-Specific Language}
+
+One of the biggest risks in a system like FOKS is signature malleability
+due to issues like permitting non-canonical encodings~\cite{conf/crypto/Bleichenbacher98,bip66}, 
+lack of clear domain separation~\cite{ncc2019,cryptoeprint:2020/241}, 
+or undefined behavior due to parsing and encoding bugs~\cite{heartbleed2014durumeric}.
+
+To address these threats, and at the same time to provide an convenient language for 
+defining RPC protocols, we introduce the Snowpack Language~\cite{snowpack}, which is influenced
+by protobufs~\cite{protobuf}, Framed Msgpack-RPC as used in Keybase~\cite{keybase}
+and Cap'n Proto~\cite{capnproto}. A further prooperty we insist upon is support
+for backwards and forwards compatibility. Since FOKS is a federated system, we have 
+no expectations that upgrades will happen in lockstep. The protocol itself must behave
+well an any number of partially-upgraded configurations.
+
+By way of example, see Figure~\ref{fig:group-change} for the definition of a sigchain link both for teams
+and users in the Snowpack language. Any constant of the form \texttt{@1} or \texttt{0x8fbf37f586b0bc6e}
+is meant to be \textit{immutable}. Once written down in the protocol, it should never change. For instance,
+look at the first field in the structure: \texttt{chainer @0 : HidingChainer;}. The \texttt{@0} indicates that this
+field will take the 0th slot in the encoded version of the structure. Future editors of this file must
+never introduce a new field at slot 0 with a different type, as that would cause old clients to fail
+in decoding. All new fields should be added at the end of the structure. Old clients will ignore fields
+from the future that they do not know how to decode. Similarly, it is allowable to delete a field.
+Software with older version of the protocol will get 0 values for the deleted fields. In the Go language,
+this means \texttt{0} for integers, empty strings for strings, empty slices for lists, and nil 
+pointers for optional fields. Of course new clients must consider the impact on older clients to 
+leave 0-ed fields, but the protocol layer itself does not introduce a failure here.
+
+\begin{figure}[ht]
+  \centering
+\begin{verbatim}
+  struct GroupChange @0x8fbf37f586b0bc6e {
+    chainer @0 : HidingChainer;
+    entity @1 : FQEntity;
+    signer @2 : GroupChangeSigner;
+    changes @3 : List(MemberRole);
+    sharedKeys @5 : List(SharedKey);
+    metadata @6 : List(ChangeMetadata);
+}
+\end{verbatim}
+\caption{A sigchain link in the Snowpack language.}
+\label{fig:group-change}
+\end{figure}
+
+Structures like \texttt{GroupChange} from Figure~\ref{fig:group-change} are
+encoded as JSON-style arrays on the wire, with fields written to slots as
+directed by their \texttt{@i}-style positions. Elided fields are written down as
+\texttt{null} values. Before going out to the wire, the JSON-style arrays are
+encoded with the Msgpack~\cite{msgpack} encoding format. Where two possible
+encodings are possible (e.g., the number \texttt{0x2} can be encoded as
+\texttt{0x2} or \texttt{0xcd 0x00 0x02}), the shorter encoding is mandated. Note
+that field names (like \texttt{chainer} above) are not sent over the wire, but
+are available on either end as human-readable references to fields. Thus, it is
+permitted to rename a field as long as its type doesn't change. We note that
+serializing using JSON-style dictionaries seems error-prone, since keys can
+repeat or be ordered in different ways. Snowpack's slot-oriented encoding aims
+to avoid these styles of ambiguities and to minimize encoding sizes. At the same
+time, development tools can decode encoded messages without reference to
+protocol specification files.
+
+
+
 \subsection{Cryptographic Primitives}
 \label{sec:cryptography}
+
+We have tried as much as possible to make boring, unopinionated cryptographic
+decisions. Throughout the system, hashing uses SHA512 truncated to 256
+bits~\cite{rfc6234}. Message authentication codes are with HMAC~\cite{rfc2104}
+over SHA512/256. HMAC is used for MAC'ing but also for commitments, and in 
+general, any context where a pair of items are hashed together (one being the ``key''
+and the other being the ``data'').
+
+For signing, we use EdDSA with the Ed25519 curve~\cite{eddsa}.  Public-key
+encryption is a hybrid of Diffie-Hellman over
+Curve25519~\cite{cryptoeprint:2011/368} and MLKEM~\cite{nist-fips-203} using a
+construction similar to X-Wing~\cite{xwing}, but with a different binary
+encoding format and constants. Thus, in practice, all device keys, PUKs,
+PTKs, and so are are not a single keypair, but rather a triple: an EdDSA 
+keypair, a Curve25519 keypair, and an MLKEM keypair. Wherever public keys
+are introduced, an EdDSA signature over the Curve25519 and MLKEM public keys
+is produced to bind them together.
 
 \subsubsection{Hashing and MAC'ing}
 
