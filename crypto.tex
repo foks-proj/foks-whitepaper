@@ -306,6 +306,7 @@ parameters depend on the application, and are shown in Table~\ref{tab:hesp-param
 \end{table}
 
 \subsection{Privacy}
+\label{sec:sigchain-viz}
 
 Previous systems like Keybase~\cite{keybase} espoused a notion of transparency
 regarding a user's identity and devices. Any user $u$ is free to load the 
@@ -317,12 +318,19 @@ system~\cite{zoom-privacy} is derived from Keybase's, by because it caters to
 enterprise settings, opts for more privacy, obscuring most deatils about user's
 identities.
 
+As described above, FOKS takes the more privacy-respecting approach, similar
+to that of Zoom's system. User $u$ can load $v$'s sigchain only if $u$ 
+allows it. The team invitation flow~\ref{sec:invitation} is an example of
+how $v$ shares a view of his sigchain only as required. 
 
-\subsubsection{Blinding and Commitments}
-\label{sec:commitments}
-
-\subsubsection{Sigchain Visibility and Permissions}
-\label{sec:sigchain-viz}
+Another important privacy feature is how device names are handled. As
+described in Section~\ref{sec:sigchains}, users do not write 
+device names directly into sigchain links.  Instead, when provisioning
+a device name $n$, the user picks a random 32-byte value $r$, and publishes
+$Hmac(n, r)$ into the sigchain. On playback, the server returns $r$ and $n$, 
+so the user can check it's the same value as intended. If the user later
+regrets the choice of $n$, the server can throw $n$ and $r$ away while
+still allowing playback of the sigchain.
 
 \subsection{Secret Key Management}
 
