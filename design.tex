@@ -1055,6 +1055,36 @@ to avoid these styles of ambiguities and to minimize encoding sizes. At the same
 time, development tools can decode encoded messages without reference to
 protocol specification files.
 
+In the definition of the \texttt{GroupChange} structure from
+Figure~\ref{fig:group-change}, note the 64-bit integer
+\texttt{0x8fbf37f586b0bc6e}. This is a randomly-generated number that serves as
+a \textit{domain separator}. We refer to it below as unique type identifier
+(UTID). Though domain specifiers are optional in the Snowpack language, when a
+structure provides it, the snowpack compiler fills in five possible
+cryptographic operations for the structure:
+%
+\begin{itemize}
+
+  \item \texttt{PrefixedHash}(\textit{obj}): The object's UTID is big-endian encoded, then
+  prepended to the object's binary Msgpack encoding. The hash of the combined message is returned.
+
+  \item \texttt{Hmac}(\textit{obj}, \textit{key}): As above, a mesasge is formed out of the object's UTID
+  concatenated with the encoding of the object itself. The combined message is the message input
+  to the MAC function, and the key is passed through as the key.
+
+  \item \texttt{SealIntoSecretBox}(\textit{obj}, \textit{nonce}, \textit{key}): The object's UTID is
+  encoded and conctacted with the supplied \textit{nonce}. The new value is then used as the nonce
+  passed into the encryption algorithm, along with the encoding of \textit{obj} and the supplied \textit{key}.
+
+  \item \texttt{Sign}(\textit{obj}, \textit{key}): The object's UTID is prepended to an encoding
+  of \textit{obj}; the combined message is then used as the message input, passed along to the 
+  signature algorithm along with the supplied \textit{key}.
+
+\end{itemize}
+%
+%
+Public key encryption calls into \texttt{SealIntoSecretBox} with a random session key, so therefore uses the same
+domain separation mechanism.
 
 
 \subsection{Cryptographic Primitives}
