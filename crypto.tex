@@ -307,6 +307,17 @@ parameters depend on the application, and are shown in Table~\ref{tab:hesp-param
 
 \subsection{Privacy}
 
+Previous systems like Keybase~\cite{keybase} espoused a notion of transparency
+regarding a user's identity and devices. Any user $u$ is free to load the 
+sigchain of any other user $v$ on the system, and can learn how many devices $v$
+has, when those devices were added to $v$'s sigchain, and the names of these
+devices. Howver, team membership was private, so $u$ could only load team $t$'s
+sigchain, or learn team $t$'s name, if $u$ is on team $t$.  Zoom's
+system~\cite{zoom-privacy} is derived from Keybase's, by because it caters to
+enterprise settings, opts for more privacy, obscuring most deatils about user's
+identities.
+
+
 \subsubsection{Blinding and Commitments}
 \label{sec:commitments}
 
