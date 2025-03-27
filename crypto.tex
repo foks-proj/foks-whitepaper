@@ -184,6 +184,7 @@ struct HybridSecretKeySHA3Payload @0x8a9e327647262289 {
 \end{figure}
 
 \subsubsection{Key Derivation}
+\label{sec:xwing-key-derivation}
 
 As described just above, each public key in FOKS actually consists of three keypairs. However,
 a single 32-byte secret seed suffices to generate all three, which simplifies secret key
@@ -250,8 +251,59 @@ devices, and even if so, we'd like to support older, widely-deployed hardware.
 Since there are no perfoct solutions here, we have designed a PQ-secure system
 around existing PIVs as follows:
 
+\begin{enumerate}
+  \item Extract a "secret" from the PIV module: pick an unused ``retired key management'' slot
+  (0x82-0x95), and compute $g^{x^2}$ via the ECDH algorithm. Use this value as the seed
+  to create a new ML-KEM keypair. Compute ML-KEM on user's computer after extracting the secret
+  and deriving the keys.
+  \label{step:pq-secret}
+
+  \item Select a different retired key management slot to use for classical ECDH over curve p256.
+  Compute ECDH as usually using the YubiKey's hardware.
+
+  \item  Combine the secret keys from the previous two steps using the X-wing-style
+  derivation scheme from Section~\ref{sec:xwing-key-derivation}.
+\end{enumerate}
+
+An important property of this system is that all of the relevant key material
+lives on the YubiKey; none lives on the user's computer. The YubiKey is all the
+user needs to recover important secrets, even if the computer is lost or suffers
+data loss. Further, this system is no less secure than an encryption scheme
+without PQ-security, as the classical ECDH computation still happens on the
+YubiKey as normal. That is, we are not forcing the user to choose between PQ and
+hardware security.  However, this scheme has an important shortcoming. If the
+user later reuses the key management slot in Step~\ref{step:pq-secret} for a
+different purpose, and exports the public key $g^x$ from the device, the scheme
+is no longer PQ-secure.  A quantum computer could recover $x$ from $g^x$ and
+then derive the ML-KEM secret key.  This shortcoming makes us long for better
+hardware support for ML-KEM.  However, a mitigating factor here is that PIV is
+an infrequently-used standard (and for instance is way less popular than FIDO2).
+There are few competing applications using these features and key slots.
+
 \subsubsection{High-Entropy Secret Phrase}
 \label{sec:hesp}
+
+For backup device keys (which FOKS users can write on pieces of paper), and 
+exchanging provisioning secrets betwewen two computers, FOKS uses a simple
+encoding scheme called the ``high-entropy secret phrase''. The pattern is 
+a series of random words, each separated by a random number. All
+words are chose from the BIP39 wordlist~\cite{bip39}. The exact
+parameters depend on the application, and are shown in Table~\ref{tab:hesp-params}.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{|c|c|c|c|c|c|}
+    \hline Application & \# of Words & \# of Numbers & Number Range & Entropy \\
+    \hline
+    \hline
+    Provisioning & 7 & 6 & $[0,2^8-1]$ & $7\cdot 11 + 6\cdot 8 = 125$ \\
+    \hline
+    Backup Device Key & 8 & 7 & $[0,2^{13}-1]$ & $8\cdot 11 + 7\cdot 13 = 179$ \\
+    \hline
+  \end{tabular}
+  \caption{Parameters for high-entropy secret phrases.}
+  \label{tab:hesp-params}
+\end{table}
 
 \subsection{Privacy}
 
