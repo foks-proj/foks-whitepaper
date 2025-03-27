@@ -183,12 +183,72 @@ struct HybridSecretKeySHA3Payload @0x8a9e327647262289 {
   \label{fig:xwing}
 \end{figure}
 
-
 \subsubsection{Key Derivation}
+
+As described just above, each public key in FOKS actually consists of three keypairs. However,
+a single 32-byte secret seed suffices to generate all three, which simplifies secret key
+management and backup keys.  The key derivation system again uses the Snowpack specification
+system and simple HMAC-based key derivation. Figure~\ref{fig:key-derivation} shows the 
+Snowpack structures and variants used. The derived key is the HMAC of the \texttt{KeyDerivation} object
+with the secret 32-byte seed as the key.
+
+\begin{figure}[ht]
+  \centering
+  \begin{verbatim}
+enum KeyDerivationType {
+    // Core types
+    Signing @0;
+    DH @1;
+    SecretBoxKey @2;
+    MLKEM @4;
+    AppKey @5; // Used for different higher-level applications, like KV Store
+}
+
+enum AppKeyDerivationType {
+    Enum @0;
+    String @1;
+}
+
+enum AppKeyEnum {
+    KVStore @0;
+}
+
+variant KeyDerivation switch (t: KeyDerivationType) @0xd35cdcc95caef674 {
+    case MLKEM @4: Uint; // need 2 32-byte values to get a 64-byte seed
+    default: void;
+}
+\end{verbatim}
+  \caption{Structures and variants used in key derivation.}
+  \label{fig:key-derivation}
+\end{figure}
+
+For example, to make a new PTK, the team adminstrator picks a random 32-byte
+seed value.  When ever the PTK is used in a symmetric context (like for
+encrypting older PTKs), the key derivation uses \texttt{KeyDerivationType =
+SecretBoxKey} as an HMAC input.  Similarly for using the PTK as a signing key.
+All derived keys are also 32-bytes with the exception of the ML-KEM key, which
+needs 64-bytes. The two halfs of this derived key are generated with the same
+mechanism, but using \texttt{MLKEM=0} and \texttt{MLKEM=1} in the
+\texttt{KeyDervitation} object as the HMAC input.
 
 \subsubsection{\Yubis}
 
-\subsubsection{PQ-KEM and PIV Support}
+FOKS supports hardware keys like YubiKey that support the Personal Identity
+Verification~\cite{nist-sp-800-73-5} (PIV) standard.  This standard allows the
+device to perform public key cryptopgrahic operations, like ECDSA and
+Diffie-Hellman over the p256 elliptic curve~\cite{nist-fips-186-3}. Though we
+have chosen the Ed25519 and Curve25519 curves for use everywhere, we now need to
+accommodate another curve to fit the PIV standard. Too much ``agility'' has
+proven problematic for other systems~\cite{jwt-none}, and we would like to avoid
+it as much as possible with FOKS, but we make an exception here for a popular
+hardware standard.
+
+The bigger issue with YubiKeys is: what do to about post-quantum security?  To
+date, we have not seen a wide release of an algorithm like ML-KEM to hardware
+devices, and even if so, we'd like to support older, widely-deployed hardware. 
+
+Since there are no perfoct solutions here, we have designed a PQ-secure system
+around existing PIVs as follows:
 
 \subsubsection{High-Entropy Secret Phrase}
 \label{sec:hesp}
