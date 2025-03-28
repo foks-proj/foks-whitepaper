@@ -141,13 +141,17 @@ can be dropped; also, new type possibilites can be added without breaking the pr
 We have tried as much as possible to make boring, unopinionated cryptographic
 decisions.
 
-\subsubsection{Hashing and MAC'ing}
+\subsubsection{Hashing, MAC'ing and Symmetric Encryption}
 
-Throughout the system, hashing uses SHA512 truncated to 256
-bits~\cite{rfc6234}. Message authentication codes are with HMAC~\cite{rfc2104}
-over SHA512/256. HMAC is used for MAC'ing but also for commitments, and in 
-general, any context where a pair of items are hashed together (one being the ``key''
-and the other being the ``data'').
+Throughout the system, hashing uses SHA512 truncated to 256 bits~\cite{rfc6234}.
+Message authentication codes are with HMAC~\cite{rfc2104} over SHA512/256. HMAC
+is used for MAC'ing but also for commitments, and in general, any context where
+a pair of items are hashed together (one being the ``key'' and the other being
+the ``data''). Authenticated symmetric encryption uses Salsa20/Poly1305 as
+implemented by the NaCl~\cite{nacl} library. Sals20 has a 24-byte nonce field,
+which is often handy when combining with our domain separation strategy with
+other authenticated data. We throughout refer to encrypting with Salsa20 as
+\texttt{secretBox}'ing, as per the library's conventions.
 
 \subsubsection{Signatures and Post-Quantum Encryption}
 

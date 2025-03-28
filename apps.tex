@@ -23,4 +23,64 @@ legacy Git clients. We describe them both below.
 
 \subsection{The FOKS Key-Value Store}
 
+The FOKS Key-value (KV) store is an end-to-end encrypted key-value store, with 
+a hierchical namespace, local to each party on the system. One can store a value
+to any key of the form `/a/b/c'; the value can be a few bytes long, or many gigabytes.
+The system provides simple \textit{put} and \textit{get} operations, but also
+operations on the namespace, like listing, moving, and deletion of directories. That is,
+one can perform an operation like \texttt{mv /a/b /foo} in roughly O(1) time, without
+individually mofidying each of the entries stored under \texttt{/a/b}. Symlinks are also 
+allowed. Though the system has some important Unix-style file system behaviors,
+it does not implement full POSIX~\cite{posix-2017} semantics.
+
+When a user puts a key-value pair into the store, it does so on behalf of a party,
+whether themselves personally, or a team. It encrypts the key and value with the latest
+PUK or PTK for the acting party. Of course PTKs and PUKs can rotate after the put
+happens, so when getting values out of the store, the user might perform a decryption
+with an older PTK or PUK, depending on the circumstances. We discuss rotation in
+more detail below as we describe the various operations of the system.
+
+\subsubsection{Making a New Directory}
+
+The steps for making a new directory for party $p$ operating at role $r$ are as follows:
+
+\begin{enumerate}
+    \item Pick a random 32-byte directory key seed $s$.
+    \item Pick a random 16-byte directory ID $i$.
+    \item Derive $k$ for application \texttt{KVStore} from $p$'s PTK (or PUK) for role $r$
+    \item Encrypt $s$ with key $k$ and nonce $i$.
+    \item Post the ciphertext and the the directory ID $i$ to the server.
+\end{enumerate}
+%
+This process creates an new empty directory, floating more or less in space. To link this 
+new directory, we first need to walk to the appropriate place in the key tree, and then
+modify the parent ``directory entry'' or \textit{dirent} to point to this new directory.
+See Section~\ref{sec:walk} for more details on the walking process, but for now, assume
+we have found the appropriate parent directory $d$. The client gets the directory key
+seeds for the parent directory $d$ either from the server or from the client's local cache,
+The client then derivew to keys from this key: a 32-byte HMAC key, and a 32-byte box key.
+The client can now form a \textit{dirent} with the fields: (1) the new directory ID $i$; (2)
+the parent dirent $d$; (3) the MACs of of the name of directory (the last component of the path),
+using the MAC key derived just above; (4) the encryption of this name, using the box key
+derived just above; (5) the version number (which starts at 1); (6) the role required to
+overwite this entry; and (7) a ``binding MAC'' of the above fields, using the HMAC
+key derived for parent directory $d$. The client posts this dirent up the server, and now
+the new directory is linked into place. Note, the client can race another client here,
+in which case there will be conflict over the triple composed of $d$, the name MAC, and 
+the version number. The client that loses the race should download the winning dirent
+and potentially try again.
+
+Note that the directory name is MACed and encrypted (using authenticat-encryption) separately.
+The fields serve two different purposes: the former allows for lookups, where a client knows
+a path and want to discover which directory (or later, file) it points to; the latter allows
+for listing, where a client wants to know what is in a directory.
+
+\subsubsection{Walking the Namespace}
+\label{sec:walk}
+
+
+
+
+
+
 \subsection{The FOKS Git Server}
