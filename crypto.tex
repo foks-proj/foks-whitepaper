@@ -387,6 +387,45 @@ of the session key for the user's current passphrase, $p_0$. To derive $\sk{p_0}
 a simple stretching algorithm and interpret the result as a Curve25519 secret key; then we
 derive $\pk{p_0}$ from the secret key as usual. Finally, $g_0$ is the encryption of the session
 key $s_0$ for the user's current PUK. We include $\pk{p_0}$ in the plaintext for reasons
-we will see shortly.
+we will see shortly. After the client creates encryptions $e_0$, $f_0$, and $g_0$, it sends them
+up to the server, for later user on this and other devices.
+
+At Epoch 1, we have passphrase stationary at $p_0$  but the user's PUK is rotated from $u_0$ to $u_1$.
+We will make a SKMWK $r_1$ and a new session key $s_1$. $s_1$ will be encrypted for the user's
+new PUK and for the user's existing passphrase. This user might have not have input their
+passphrase on this machine, and it would annoy the user to prompt for it for a seemingly
+unrelated operation. For this reason, we included $\pk{p_0}$ in the plaintext of $g_0$, which
+the user can decrypt with access to the old PUK $u_0$. The new encryptions are then:
 %
+\begin{align*}
+e_1 &= \secretBox{[r_0,r_1]}{s_1} \\
+f_1 &= \dhbox{s_1}{\pk{p_0}}{\sk{t_1}}, \pk{t_1} \\
+g_1 &= \secretBox{[s_1,\pk{p_0}]}{u_1} \\
+\end{align*}
+
+In the next epoch, the user changes their passphrase from $p_0$ to $p_1$, and the PUK remains
+at $u_1$. The new encryptions are:
+%
+\begin{align*}
+e_2 &= \secretBox{[r_0,r_1,r_2]}{s_2} \\
+f_2 &= \dhbox{s_2}{\pk{p_1}}{\sk{t_2}}, \pk{t_2} \\
+g_2 &= \secretBox{[s_2,\pk{p_1}]}{u_1} \\
+\end{align*}
+%
+And so on. It might seem at first that there is an unnecssary layer of indirection with using
+SKMWKs $r_i$'s and session keys $s_i$'s. To see why it's required, consider the case of a 
+device active around passphrase generation $p_0$, but then turned off for a long time,
+only to come back online at a much later passphrase generation, say $p_9$. At this point,
+the user has forgotten passphrae $p_0$ and is only expected to know $p_9$. When they try
+to unlock secret key materials on this hitherto-mothballed device, they will enter passphrase
+$p_9$. The scheme is robust to this scenario. The device pulls $f_9$ down from the server
+and derives $\sk{p_9}$ from $p_9$. It can then decrypt $f_9$ and recover the session key $s_9$.
+Then, it pulls $e_9$ down from the server, and uses it to recover all historical $r_i$'s, including
+$r_0$. With $r_0$, it can decrypt the device's secret key material, encrypted ages ago. After so doing, it discards
+the encryption with $r_0$ and then upgrades to an encryption with $r_9$. This way, going forward,
+if an attacker steals the device and learns the old passphrase $p_0$, she cannot recover
+the secret key material. Decrypting the secret key material requires $r_9$, which only
+can be decrypted with the latest passphrase ($p_9$) or the latest PUK.
+
+
 
