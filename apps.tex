@@ -70,7 +70,7 @@ in which case there will be conflict over the triple composed of $d$, the name M
 the version number. The client that loses the race should download the winning dirent
 and potentially try again.
 
-Note that the directory name is MACed and encrypted (using authenticat-encryption) separately.
+Note that the directory name is MAC'ed and encrypted (using authenticated-encryption) separately.
 The fields serve two different purposes: the former allows for lookups, where a client knows
 a path and want to discover which directory (or later, file) it points to; the latter allows
 for listing, where a client wants to know what is in a directory.
@@ -78,9 +78,41 @@ for listing, where a client wants to know what is in a directory.
 \subsubsection{Walking the Namespace}
 \label{sec:walk}
 
+Most operations start with a ``walk'' of the namespace, from the root down to the desired node.
+For a path like \textttt{/a/b/c} there are of course three directories along the way,
+and three corresponding dirents.  Each party has a designated root directory ID, initialized
+by the first user of the KV store for this party. The client can fetch this directory 
+with a special RPC, which returns the directory ID and its boxed directory key seeds.
+To walk down to \texttt{/a}, the client MAC's the name \texttt{a} with MAC keys 
+derived from these seeds, and then queries the server for the dirent in \textttt{/}
+with the computer MAC, at the greatest version. This dirent, if found, contains a
+```binding MAC```, which cryptographically binds the dirents fields together, as MACed
+by the directory's MAC key. The client verifies this MAC, and if it passes, then the next
+step in the path is the ``value'' field of the dirent, which contains the directory ID
+of \texttt{/a}. This process continues until the leaf is reached.
 
+To reduce latency, clients make heavy use of local caching. As they walk, they write down
+which dirents they passed through and which versinos of those dirents that they saw.
+At the end of the process, the send up the whole path to the server, asking if any dirent
+was stale. If so, the clients repeats parts of the walk to get fresh data. 
 
+Note there is a special ``value'' field for ``tombstones,'' which signify that the 
+file at the path was deleted. That value can later be reinsted if a subsequent version
+of the dirent replaces the tombstone with a value that points to a directory or file.
 
+A dishonest server can withhold fresh dirent versions, which might mask file
+updates, deletions or creations. Future improvements to this design might
+include a transparency tree akin to the existing Merkle Trees to force the
+server to be honest. The throughput and performance of this tree is a challenge
+that we so far have not tackled.
+
+\subsubsection{Creating Small Files}
+
+\subsubsection{Creating Large Files}
+
+\subsubsection{Listing Directories}
+
+\subsubsection{Key Rotations}
 
 
 \subsection{The FOKS Git Server}
