@@ -3,15 +3,16 @@
 
 The goal of the FOKS system is primarily: for a user or a group of users to
 agree upon a sequence of cryptographic keys so they can perform authenticated,
-end-to-end encryption of arbitrary data. Specific applications might have
-different requirements as to the number of keys in that set, and the candence at
-which they are destroyed. For chat-style applications like Signal or WhatsApp,
-it appropriate to introduce new keys consistently and to destroy old keys as
-quickly as possible, as there is no requirement to recover historical messages.
-For other applications, like email, file systems, and long-term key-value
-storage, recovering ``historical'' data is a requirement. New user devices and
-new members in teams expect access to all relevant documents in the system, not
-just those authored since they joined.
+end-to-end encryption of arbitrary data. As a secondary goal, the system
+exposes a set of authorized signing keys to sign on behalf of the group,
+so that changes can be properly attributed. From here, we can build
+any number of applications. 
+
+For instance, one can imagine an MLS system for group messaging~\cite{MLS} where
+the chat keys are the cryptographic combination (via something like HMAC or
+SHA3) of: (1) the root of the MLS ratchet tree; and (2) the most current PTKs
+available for the FOKS group. In this way, one can simultaneously achieve
+Signal-style forward secrecy and FOKS-style team and device management. 
 
 
 \subsection{Key-Value Store}
