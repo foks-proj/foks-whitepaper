@@ -345,5 +345,48 @@ the property should hold.
   should eventually rotate (when they come online) so that they cannot be decrypted with an old PUK
 \end{enumerate}
 
-
 \label{sec:passphrase}
+
+\newcommand{\secretBox}[2]{\textsf{secretBox}(#1, #2)}
+\newcommand{\dhbox}[3]{\textsf{dhBox}(#1, #2, #3)}
+\newcommand{\pk}[1]{\textsf{publicKey}(#1)}
+\newcommand{\sk}[1]{\textsf{secretKey}(#1)}
+
+We describe the process through a small example: two rotations, one due to a PUK rotation,
+and one due to a passphrase change. The net result is three different configurations
+(the original, and the two following rotations). The general idea is that we have a new ``session''
+key at every update, which is symmetrically encrypts the SKMWKs. The session key gets encrypted
+twice: once for a key derived from the current passphrase, and one for the user's PUK. This
+allows recovery of the SKMWKs with either the passphrase or the PUK:
+%
+  \begin{center}
+  \begin{tabular}{|c|c|c|c|}
+    \hline
+     Key & Epoch 0 & Epoch 1 & Epoch 2 \\
+     \hline
+     \hline
+      SKMWK & $r_0$ & $r_1$ & $r_2$ \\
+      Session Key & $s_0$ & $s_1$ & $s_2$ \\
+      Ephemeral DH Key & $t_0$ & $t_1$ & $t_2$ \\
+      Passphrase & $p_0$ & $p_0$ & $p_1$ \\
+      PUK & $u_0$ & $u_1$ & $u_1$ \\
+     \hline
+  \end{tabular}
+\end{center}
+%
+At Epoch 0, we have the initial configuration, which consists of the following three encryptions:
+%
+\begin{align*}
+e_0 &= \secretBox{r_0}{s_0} \\
+f_0 &= \dhbox{s_0}{\pk{p_0}}{\sk{t_0}}, \pk{t_0} \\
+g_0 &= \secretBox{[s_0,\pk{p_0}]}{u_0} \\
+\end{align*}
+%
+$e_0$ is the encryption of the SKMWK $r_0$ for the session key $s_0$.  $f_0$ is the encryption 
+of the session key for the user's current passphrase, $p_0$. To derive $\sk{p_0}$, we employ
+a simple stretching algorithm and interpret the result as a Curve25519 secret key; then we
+derive $\pk{p_0}$ from the secret key as usual. Finally, $g_0$ is the encryption of the session
+key $s_0$ for the user's current PUK. We include $\pk{p_0}$ in the plaintext for reasons
+we will see shortly.
+%
+
