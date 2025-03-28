@@ -305,43 +305,45 @@ parameters depend on the application, and are shown in Table~\ref{tab:hesp-param
   \label{tab:hesp-params}
 \end{table}
 
-\subsection{Privacy}
-\label{sec:sigchain-viz}
-
-Previous systems like Keybase~\cite{keybase} espoused a notion of transparency
-regarding a user's identity and devices. Any user $u$ is free to load the 
-sigchain of any other user $v$ on the system, and can learn how many devices $v$
-has, when those devices were added to $v$'s sigchain, and the names of these
-devices. Howver, team membership was private, so $u$ could only load team $t$'s
-sigchain, or learn team $t$'s name, if $u$ is on team $t$.  Zoom's
-system~\cite{zoom-privacy} is derived from Keybase's, by because it caters to
-enterprise settings, opts for more privacy, obscuring most deatils about user's
-identities.
-
-As described above, FOKS takes, by default, the more privacy-respecting
-approach, similar to that of Zoom's system. User $u$ can load $v$'s sigchain
-only if $u$ allows it. The team invitation flow~\ref{sec:invitation} is an
-example of how $v$ shares a view of his sigchain only as required.  However,
-server administrators can configure their server in FOKS to have different
-policies.  A server, for instance, can allow all logged-in users to see each
-other without need for explicit permissions. A complementary policy might be
-that $v$ can always directly add $u$ to a team, and if $u$ is unhappy with this
-situation, he can leave. This configuration might work well for a
-company-specific server.
-
-Another important privacy feature is how device names are handled. As
-described in Section~\ref{sec:sigchains}, users do not write 
-device names directly into sigchain links.  Instead, when provisioning
-a device name $n$, the user picks a random 32-byte value $r$, and publishes
-$Hmac(n, r)$ into the sigchain. On playback, the server returns $r$ and $n$, 
-so the user can check it's the same value as intended. If the user later
-regrets the choice of $n$, the server can throw $n$ and $r$ away while
-still allowing playback of the sigchain.
-
 
 \subsection{Secret Key Management}
 
+Secret keys derives from 32-byte seeds, which never leave the device they are created
+on (with the possible exception of backup keys, which are written down on paper).
+We discuss here how the FOKS client stores these secret seeds persistently. 
+
 \subsubsection{Secure Enclaves}
 
+Where possible, FOKS uses OS-specific secure enclaves. This is the simple case.
+FOKS stores the actual 32-byte seeds in a FOKS-specific keyring file in the user's 
+home directory. For each seed, FOKS picks a random 32-byte key to encrypt with, and,
+if possible, stores that 32-byte key in the user's OS keyring. 
+
 \subsubsection{Passphrase-based Management}
+
+Though it's not encouragd, FOKS does offer a passphrased-based protection mechanism
+for secret key seeds. As above, each secret seed gets its own secret-key wrapping 
+material wrapping key (SKMWK). But instead of storing the SKMWKs in the OS keystore,
+they are encrypted with a key derived from the user's passphrase. We have important 
+design considerations for this system that make it quite complex:
+
+\begin{enumerate}
+
+\item If the user has two computers, $A$ and $B$, and the user changes his passphrase on A, when B comes online
+ with the old passphrase, it has to decrypt with the new passphrase.
+
+\item Keys encryped for old passphrases need to eventually be migrated to the new passphrase, so that if
+an attacker gets the old passphrase and all server data, they still can't decrypt the key.  Of course
+this is only possible if that computer $B$ comes back online after the change, but assuming that
+the property should hold.
+
+\item Passphrae recovery: to change the passphrase and recover keys, it is sufficient to know the latest PUK.
+ Thus, having a backup paper key or a backup YubiKey should suffice to ``recover'' a passphrase
+ and to allow the user to change it without knowing the old passphrase.
+
+\item As with passphrases, if the PUK is updated, all machines with passphrase-encrypted keys
+  should eventually rotate (when they come online) so that they cannot be decrypted with an old PUK
+\end{enumerate}
+
+
 \label{sec:passphrase}
