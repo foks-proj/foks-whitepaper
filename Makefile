@@ -10,7 +10,7 @@ BIBTEX = bibtex
 all: $(OUTPUT)
 
 # Build PDF
-$(OUTPUT): $(TEXFILE) refs.bib threatmodel.tex design.tex crypto.tex
+$(OUTPUT): $(TEXFILE) refs.bib threatmodel.tex design.tex crypto.tex apps.tex
 	$(LATEX) $(TEXFILE)
 	$(BIBTEX) $(basename $(TEXFILE))
 	$(LATEX) $(TEXFILE)

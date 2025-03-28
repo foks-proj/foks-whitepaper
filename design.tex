@@ -318,7 +318,7 @@ to a coherent state of the system, across all parties, preventing selective
 rollback of sigchains. 
 
 FOKS uses a Merkle Tree strategy that is a hybrid of Keybase's~\cite{keybase},
-CONIK's~\cite{melara2015coniks} and SEAMLess's~\cite{chase2019seemless}, but
+CONIK's~\cite{melara2015coniks} and SEEMLess's~\cite{chase2019seemless}, but
 with a simple novel mechanism introduced to obviate the need for pseudo-random
 functions. The Merkle tree stores each party's sigchain tail at a leaf 
 in the Merkle tree. The server computes hashes all the way up to the root node.
@@ -362,7 +362,7 @@ Section~\ref{sec:subchains}, each party has multiple chains.  $r_i$ is a random
 value that was generated when the $(i-1)$ link was published. The $(i-1)$ link
 contains the value $H(r_i)$ in the field~\ref{item:next-tree-location} from
 Section~\ref{sec:sigchains}. This simple mechanism achieves the same end as the
-PRF in CONIKs and SEAMLess, in that it's unpredictable in the tree where a
+PRF in CONIKs and SEEMLess, in that it's unpredictable in the tree where a
 team's sighcains is stored. This unpredictability prevents data leaks that would
 otherwise allow the owners of neighboring nodes in the tree to deduce when $p$'s
 chain advances. 
