@@ -14,7 +14,13 @@ SHA3) of: (1) the root of the MLS ratchet tree; and (2) the most current PTKs
 available for the FOKS group. In this way, one can simultaneously achieve
 Signal-style forward secrecy and FOKS-style team and device management. 
 
+For our first FOKS prototypes, we have focused instead of two important applications:
+first, at the foundational level, a simple key-value store. Members of the team
+can put and get key-value pairs to the FOKS server. Keys and values are encrypted
+with authenticated encryption agains the team's PTKs. A second application, built
+atop the first, is an end-to-end encrypted Git server, that is compatiable with
+legacy Git clients. We describe them both below.
 
-\subsection{Key-Value Store}
+\subsection{The FOKS Key-Value Store}
 
-\subsection{Git}
+\subsection{The FOKS Git Server}
