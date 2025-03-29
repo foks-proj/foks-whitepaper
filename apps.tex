@@ -126,9 +126,56 @@ small file and replaces the dirent to point to the new file ID.
 
 \subsubsection{Creating Large Files}
 
-\subsubsection{Listing Directories}
+Files bigger than 2KB get a different treatment: each gets its own 32-byte encryption
+key, and they are chunked into 4MB chunks. When the put commences, the client
+creates this random 32-byte file key, and encrypts it for the party's latest
+PTK (or PUK). Each chunk gets encrypted with this key, and a nonce constructed 
+from: (1) the file ID; (2) the chunk's offset; (3) an ``is-final'' flag;
+and (4) the unique type ID for chunk nonces. These fields cannot all fit into
+Salsa20's 24-byte nonce field, so they are hashed and truncated to 24 bytes.
+This nonce selection here prevents an evil server from reordering chunks,
+lying about the end-of-the-file, or mixing-and-matching chunks from different
+files.
 
 \subsubsection{Key Rotations}
+\label{sec:kv:rotations}
+
+Given the KV stores persistent data, and new clients and members might need to
+access old data, there is only so much we can do to prevent data theft if a
+client device is compromised.  Consider this example: Alice is a member of team
+``Acme'' and writes a file \texttt{/foo}.  Call her device key $d$, her PUK
+$u_0$ and the PTK $t_0$. The server has access to the sequence of encryptions,
+starting from the $d$, through $u_0$, $t_0$ and the file key $f$., that secure the contents of
+\texttt{/foo}. The server \textit{needs} access to these data to broker access
+to Alice's other devices, and the other members of team Acme.
+Years pass, and device $d$ is lost, and Alice revokes $d$ after
+realizing this.  Along the way, $u_0$ has rotated to $u_6$, and the latest Acme
+PTK is now $t_{100}$.  And let's say all along, the FOKS clients of ACME members
+rotate the encryptions stored in the KV store to use the latest PTKs. An evil
+server who recovers device $d$ can still acceess the file \texttt{/foo}, despite
+all the well-intenioned rotations, because it kept the original encryption of
+\texttt{/foo}, encrypted with the original keys, and disobeyed commands to throw
+away the ciphertext. In other words, if the server doesn't cooperate, there is
+only so much that can be done to protect old data after a device compromise.  Of
+course, future data is safe in this scenario.
+
+The Keybase system takes the stance that rotating old file system
+data is not worth it, due to scenario described ebove. If we 
+assume the server is semi-honest, that is, if it sometimes (or always!)
+throws away old ciphertexts, then we still made
+security gains by rotating file system data, even if the server later
+becomes evil.
+
+The FOKS KV Store leaves the door open to later perform these
+reencryptions, though so far we have not implemented it.
+Clients should periodically sweep over all keys and values,
+reencrypt them for the latest PTKs (or PUKs), and instruct
+the server to discard the old ciphertexts. Due to per-file
+keys for large files, there is no need to download and reupload
+large file data. Instead, if suffices to reencrypt the file key.
+
+\subsubsection{Listing Directories}
+
 
 \subsubsection{Garbage Collection}
 
