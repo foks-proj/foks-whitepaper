@@ -233,8 +233,20 @@ helper gives commands of the form:
     push refs/heads/main:refs/heads/main
 \end{verbatim}
 %
-and then the helper must understand which objects the server already
-has, and must push only the missing objects.
+The helper starts at the commit refered to by \texttt{refs/heads/main},
+then walks the commit tree backwards until it finds objects that the
+server already has. Then it must push the missing objects up to the server,
+then remap the references to point to the HEAD commit.
+
+Much work has been done to optimize such protocols. Servers in particular
+can scan the objects they have in their database to assist the client
+in figuring out the smallest set of objects possible. Unfortunately,
+in our case, the FOKS server is of little help, since it doesn't
+know the names of the objects (i.e., their SHA1 hashes). Instead, it
+sees MACs of these hashes, and also encryptions. And for good reason.
+The server should not know these content hashes, since knowing them
+would allow the server to deduce, in important cases, the contents
+of those objects.
 
 The FOKS Git server writes a git remote to the user's 
 FOKS KV space, under the prefix \texttt{/app/git}. To describe
