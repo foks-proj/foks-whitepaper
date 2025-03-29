@@ -160,7 +160,7 @@ only so much that can be done to protect old data after a device compromise.  Of
 course, future data is safe in this scenario.
 
 The Keybase system takes the stance that rotating old file system
-data is not worth it, due to scenario described ebove. If we 
+data is not worth it, due to scenario described above. If we 
 assume the server is semi-honest, that is, if it sometimes (or always!)
 throws away old ciphertexts, then we still made
 security gains by rotating file system data, even if the server later
@@ -172,11 +172,71 @@ Clients should periodically sweep over all keys and values,
 reencrypt them for the latest PTKs (or PUKs), and instruct
 the server to discard the old ciphertexts. Due to per-file
 keys for large files, there is no need to download and reupload
-large file data. Instead, if suffices to reencrypt the file key.
+large file data. Instead, it suffices to reencrypt the file key.
 
-\subsubsection{Listing Directories}
-
+There is no limit to the number of active entries in a directory,
+so we cannot assume a directory will be rotated all at once. Thus, 
+we allow for two valid directory key seeds per directory. As the
+reencryption process sweeps across the directory, more dirents
+use the new key, and fewer use the old, until the old key can 
+be retired.
 
 \subsubsection{Garbage Collection}
 
+In its current form, the FOKS KV store does not perform any garbage collection,
+opting instead to keep prior versions of values available indefinitely. We plan
+to implement deletion in future versions so users can reclaim quota. 
+
 \subsection{The FOKS Git Server}
+
+FOKS includes an application written atop the KV store, which implements an
+end-to-end encrypted (and authenticated) Git Server. FOKS URLs for 
+a user looks like this:
+
+\begin{verbatim}
+foks://acme.host/alice/tango-proj
+\end{verbatim}
+
+Where \texttt{acme.host} is the FOKS server, \texttt{alice} is the user's
+username, and \texttt{tango-proj} is the name of the repository. And
+for a team:
+
+\begin{verbatim}
+foks://acme.host/t:interns/whiskey-proj
+\end{verbatim}
+
+Where \texttt{t:interns} is the team name. Users of the system
+clone \texttt{git clone} this URL and then push and pull as
+they would a conventional Git server. Data is written through to
+the FOKS server at \texttt{acme.host}, into its KV-store,
+of course end-to-end encrypted and authenticated so that the server
+cannot read or modify the data.
+
+\subsubsection{The Git Remote Helper Protocol}
+
+FOKS's git integration is built with the Git Remote Helper 
+Protocol~\cite{git-remote-helper}.  This protocol allows Git to interact with
+remote storage systems other than its native SSH and HTTP protocols. When Git
+encounters a URL with a custom scheme like \texttt{foks://}, it looks for an
+executable named \texttt{git-remote-foks} in the system path. Git then launches
+this helper process and communicates with it using a simple text-based protocol.
+
+The protocol consists of Git sending commands like \texttt{capabilities},
+\texttt{list}, \texttt{push}, and \texttt{fetch}, and the helper responding
+with success/failure and data. The helper translates between
+Git's object model and whatever remote storage system it interfaces with.
+
+The more helper must deeply understand Git's object model. The 
+helper gives commands of the form:
+%
+\begin{verbatim}
+    push refs/heads/main:refs/heads/main
+\end{verbatim}
+%
+and then the helper must understand which objects the server already
+has, and must push only the missing objects.
+
+The FOKS Git server writes a git remote to the user's 
+FOKS KV space, under the prefix \texttt{/app/git}. To describe
+how this application works, we first must summarize how the Git
+Remote Helper Protocol~\cite{git-remote-helper} works.
