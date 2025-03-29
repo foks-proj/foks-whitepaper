@@ -120,8 +120,8 @@ Creating a small file (one less than 2KB) works much like creating a directory. 
     \item And writes the dirent pointing to the new file ID.
 \end{enumerate}
 %
-Small files are immutable. If a change is needed,
-a new small file (with a new file ID) is uploaded in its place.
+Small files are immutable. To make an edit to a small file, a client uploads a new 
+small file and replaces the dirent to point to the new file ID.
 
 
 \subsubsection{Creating Large Files}
@@ -130,5 +130,6 @@ a new small file (with a new file ID) is uploaded in its place.
 
 \subsubsection{Key Rotations}
 
+\subsubsection{Garbage Collection}
 
 \subsection{The FOKS Git Server}
