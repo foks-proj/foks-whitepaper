@@ -161,7 +161,8 @@ a signature over the following data:
        \label{item:name}
     \item A cryptographic commitment to the user's device name (picked by the user)
     \item The role of the new device (currently always \owner ).
-    \item For \yubis , a public ``subkey' (see Section~\ref{sec:authentication})
+    \item For \yubis , a public ``subkey' used to authenticate the client
+      to the server.
 \end{enumerate}
 
 The client computes nested signatures first by the new PUKs introduced in
@@ -390,8 +391,8 @@ have sequence numbers and contain the cryptographic hashes of previous links. Wh
 administrator creates a new server, they first create a \textit{hostkey}, a signing key-pair.
 This public key becomes the host's ID. The first chainlin contains this hostkey and several
 subkeys, one that serves as a TLS CA for the server, and one used to sign \textit{zonefiles}
-for the server. The \textit{zonefile} contains the DNS names for the server's various services
-(see Section~\ref{sec:foks-server}). Subsequent chainlinks can change any of these keys
+for the server. The \textit{zonefile} contains the DNS names for the server's various services.
+Subsequent chainlinks can change any of these keys
 or subkeys, as long as they are signed with keys valid up until that point. clients
 play these links back to map host IDs to DNS names as they establish connections
 to new servers. 
