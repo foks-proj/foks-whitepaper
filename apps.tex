@@ -246,9 +246,33 @@ know the names of the objects (i.e., their SHA1 hashes). Instead, it
 sees MACs of these hashes, and also encryptions. And for good reason.
 The server should not know these content hashes, since knowing them
 would allow the server to deduce, in important cases, the contents
-of those objects.
+of those objects. 
 
-The FOKS Git server writes a git remote to the user's 
-FOKS KV space, under the prefix \texttt{/app/git}. To describe
-how this application works, we first must summarize how the Git
-Remote Helper Protocol~\cite{git-remote-helper} works.
+To achieve reasonable performance, while maintaining compatibility
+with the Git protocol, the FOKS git system makes aggressive use
+of \textit{packfiles} and \textit{packfile indices}. When
+clients push, they eagerly pack objects into packfiles, 
+and send these packfiles up to the server. A packfile, in Git, 
+actually consists of two files: the \textit{packfile} itself,
+which is a compressed concatenation of multiple objects; and
+the \textit{packfile index}, which contains among other fields,
+a list of all objects contained in the packfile. 
+
+When a client fetches a new HEAD from the server, the algorithm is roughly:
+%
+\begin{enumerate}[itemsep=2pt,parsep=0pt]
+    \item Fetch all packfile indices from the server
+    \item Fetch the HEAD object from the KV store
+    \item Travese the commit graph starting from the HEAD object:
+    \begin{enumerate}[itemsep=2pt,parsep=0pt]
+        \item If the next object is in the packfile index, fetch
+             the packfile from the KV store.
+        \item Otherwise, fetch the object from the KV store.
+    \end{enumerate}
+\end{enumerate}
+%
+The assumption here is that clients pack objects along with other
+objects that future clients will need to pull together. As long
+as this assumption roughly holds, clients that pull can avoid
+costly round-trips and instead can efficiently download batches of objects
+via packfiles.
