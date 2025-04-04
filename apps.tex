@@ -1,5 +1,6 @@
 
 \section{Applications}
+\label{sec:apps}
 
 The goal of the FOKS system is primarily: for a user or a group of users to
 agree upon a sequence of cryptographic keys so they can perform authenticated,
@@ -276,3 +277,41 @@ objects that future clients will need to pull together. As long
 as this assumption roughly holds, clients that pull can avoid
 costly round-trips and instead can efficiently download batches of objects
 via packfiles.
+
+\subsubsection{Attribution}
+
+Secure attribution of commits is left for future work, but we describe how it
+can work here. With authenticated encryption, members of a team are sure that no
+one outside the team (like the server) has tampered with their data. However,
+there is no cryptographic method to establish who authored commits. Such a
+system can be built atop the Git system, with FOKS's help. A plan might look like:
+
+\begin{enumerate}
+
+    \item
+First off, it now
+becomes important to use SHA2 rather than SHA1 based object hashing. The latter
+is the default in git, but due to the ease with which one can find colliisions
+in SHA1, signing over these hashes achieves little. Up until now, SHA1 does
+not pose a security threat, since all objects and object hashes are protected
+with authenticated encryption.
+
+    \item Next, sign a new PGP~\cite{pgp} key into the user's sigchain,
+      and encrypt the secret key for the user's PUK. Export this PGP
+      key into the user's local PGP keyring on every device the user
+      needs to make git commits from.
+
+    \item Configure git to sign each commit with the exported PGP key.
+
+    \item The team administrator creates a signed PGP roster, that maps
+      each PGP key to a user's name and UID.
+
+\end{enumerate}
+
+Nested team graphs can complicate this picture. If $u$ is a member of team $t_1$,
+which is in turn a member of team $t_2$, what happens when $u$ signs commits
+for $t_2$'s Git repository? Recall that readers of $t_2$ might not have access 
+to $t_1$'s roster, and therefore might not be able to read $u$'s sigchain
+or verify its PGP key. So administrators with better visibility need
+to propogate these keys to the rest of the team; and this process 
+might be recursive.

@@ -54,6 +54,67 @@ encrypted data sharing and git hosting.
 
 \section{Introduction}
 
+In recent years, Signal, iMessage and WhatsApp have proven out the customer
+demand for end-to-end encryptied communication. But despite the success of these
+systems, and their vast improvements over previous, less-secure systems,
+important problems remain unresolved.  Most obviously, questions remain around
+identity. In a recent, high-profile incident, United States government officials
+misused Signal to mistakenly leak matters of national security to the
+press~\cite{signal-hesgeth-leak}. Relying on phone numbers as identifiers is
+only part of the problem; the larger issue, arguably, is that public identities
+are hard to audit and map to public keys, and that large groups are even harder
+to get right.
+
+We see other issues: all the systems mentioned above and many others lock users
+into a walled-garden with a single provider. Such a closed-system, and often
+closed-source ethos runs counter to the early philosophy that drove the original
+PGP cyberpunk movement: fear of a central authority.  There are also practical
+considerations, that closed-source systems are more difficult to audit. And that
+single-provider systems suffer from vendor lock-in and have the leverage
+to``monetize'' their users, since switching to a competing platform is
+impossible.
+
+The authors have deep experience with the Keybase system~\cite{keybase}, which
+came at these problems from a different angle. In Keybase, the initial focus was
+on identity, multi-device support, and formation of auditable groups that could
+evolve over time. But Keybase of course has limitations too, and like Signal,
+WhatsApp and iMessage, is stuck on a single-provider model.
+
+This paper introduces a new system: the Federated Open Key Service (FOKS).  It
+inherets much from these prior system but inhabits a different point in the
+design space. FOKS provides secure key distribution for users who have multiple
+devices. It allows those users to form groups, and unlike previous systems, for
+those groups to join other groups. Whether managing a user's device cloud, or
+managing the membership of a team, FOKS ensures that a malicious server cannot
+inject invalid members, and that it cannot withhold import revocations and
+deletions.  Many of these features are possible with previous systems, but
+FOKS's major advance architectural advance is the support of federation. Anyone
+can run a server in the FOKS network. Users can stay siloed on different
+servers, or can form teams that span multiple servers. Federation gives users
+more choice, control and better guarantees. Though servers cannot decrypt or
+sign on behalf of users, they still can see metadata, and often are called upon
+to protect user privacy. Therefore, companies or small, tight-knit groups have
+good reason to run their own servers, and can do so in the system.
+
+This paper introduces and describes the FOKS system. We cover a threat model
+in Section~\ref{sec:threatmodel}, a system design in Section~\ref{sec:design}, 
+the use of cryptography in~\ref{sec:crypto}, and some important applications
+in Section~\ref{sec:apps}. The primary goal here is not academic novelty, but
+rather to describe a system that occupies a unique
+and quite useful set of trade-offs for end-to-end encrypted systems.
+However, there are some, to our knowledge, new contributions:
+%
+(1) An exploration of key-rotation for teams that can form
+      nearly arbitrary graphs across federated servers;
+%
+(2) a system for hiding identity and team updates in a larger
+      transparency tree with basic crypto primitives and without the need
+      for pseudo-random functions; and
+%
+(3) a new protocol specification language (called Snowpack) that enforces
+  domain separation for cryptographic operations.
+
+
 \input{threatmodel}
 % Introduction content goes here
 
@@ -69,14 +130,22 @@ The initial inspiration for FOKS is the SUNDR project~\cite{sundr}, which first
 originated the idea of a fork-consistent blockchain of edits facilitated by a
 untrusted server.  Like Keybase~\cite{keybase}, FOKS applies this basic
 architecture to the problem of key distribution, rather than the data those keys
-might secure. Many other projects have riffed on this, from
-CONIKS~\cite{melara2015coniks}, to the SEAMless~\cite{chase2019seemless} work
-out of Microsoft Research, to the widespread adoption of Key Transparency
+might secure. Many other projects have riffed on this, like
+CONIKS~\cite{melara2015coniks}, SEAMless~\cite{chase2019seemless}, 
+ELEKTRA~\cite{cryptoeprint:2024/107}
+and the widespread adoption of Key Transparency
 Signal, WhatsApp and iMessage.  The question of federation has largely been
 ignored, as these sytems all shared the basic architecture of a single upstream
 server.
 
 \section{Conclusion}
+
+We have described, at a high level, the Federated Open Key Service (FOKS).
+FOKS features multi-device support for users, arbitrary acyclic team graphs,
+PQ-encryption, and federation. With these primtives, we can build applications
+like end-to-end authenicated, encrypted key-value stores, and git hosting.
+This service is currently operational~\cite{foks-app} and all 
+source code is available on GitHub~\cite{foks-github}.
 % Conclusion goes here
 
 \bibliographystyle{plain}
