@@ -985,6 +985,75 @@ compare the new removal key against, preventing the protocol from workking.
 We believe the correct trade-off is to keep the original team removal key
 despite other rotations.
 
+\subsubsection{Sequencing Revocations and Team Removals}
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}[
+    font=\small,
+    node distance=1.8cm,
+    every node/.style={draw, rectangle, rounded corners, align=center},
+    >=stealth
+  ]
+  
+  % Top node (Merkle root)
+  \node (merkle) at (0,0) {merkle root 2000};
+  
+  % Left-side chain
+  \node (user) at (-2, -2) {user settings \\ link 6 \\ signed by $d_1$};
+  \node (t1) at (-2, -4)
+       {team $t_1$ \\ link 2 \\ signed by $u_2$};
+  \node (t2) at (-2, -6)
+       {team $t_2$ \\ link 1 \\ signed by $u_2$};
+
+  % Right-side box
+  \node (revoke) at (3, -4)
+       {revoke $d_1$, \\ rotate $u_2 \rightarrow u_3$};
+  
+  % Edges
+  \draw[-] (revoke) --  ($(3,0)$);
+  \draw[->] ($(3,0)$) -- (merkle);
+
+  \draw[->] ($(0,-2)$) -- (user);
+  \draw[->] ($(0,-4)$) -- (t1);
+  \draw[-] (merkle) -- ($(0,-6)$);
+  \draw[->] ($(0,-6)$) -- (t2);
+
+  \end{tikzpicture}
+  \caption{User revokes device $d_1$, causing PUK rotation from $u_2$ to $u_3$.}
+  \label{fig:revoke}
+\end{figure}
+
+Consider the case of a user revoking a device, as in Figure~\ref{fig:revoke}. Such a revocation
+causes an existing device key and an existing PUK to be deemed invalid going forward, and 
+for the PUK to be replaced with a new PUK. When other users play back this user's chains,
+or other subchains or teams that the user has signed, they want a strong guarantee that
+all such signatures in these chains happened \textit{before} the revocation. Within the same
+chain, this ordering is trivial, but across multiple chains, care is needed. The general
+plan in FOKS is as follow: when the user revokes a device ($d_1$ in the figure), they
+include a hash of the Merkle Root at the time. This hash then includes all of the signatures
+this key will ever sign. Anything unreachable from this root is not considered a valid
+signature for this key.
+
+Race conditions, however, might cause problems. A user might make a signature
+with device $d_1$, and then revoke it shortly thereafter. The messages might
+``cross in the mail:'' though the revocation happened after the signature, the
+signature might not be reflected in the Merkle Tree at the time of the
+revocation. FOKS does not block signature creation on Merkle Tree production.
+For efficiency's sake, updates to the Merkle Tree are batched and might lag
+behind several seconds. To address this issuec challenge, the FOKS server
+rejects signatures from devices or PUKs if there are associated signatures still
+outstanding and not reflected in the Merkle Tree. Of course a dishonest server
+can intentionally fail in this capacity, which might cause signature chains to
+fail to playback. That is, the result would be a denial-of-service, which the
+server is always capable of.
+
+Above we described how revocation of user devices work. Removal of members from 
+teams follows a similar protocol.  Note here is one rationale for requiring team
+admins to be local to the server that a team is on. Were it otherwise, the
+server could not carefully sequence signatures and revocations, as it does with
+this restriction in place.
+
 \subsection{Beacon Server}
 \label{sec:beacon}
 
@@ -1014,8 +1083,6 @@ solution for now. We host a single ``beacon'' server, which is a simple
 server that maps host IDs to DNS names. Clients take these mappings
 with a grain of salt but can verify them via the hostchain protocols
 described above.
-
-
 
 \subsection{Privacy}
 \label{sec:sigchain-viz}
