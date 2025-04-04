@@ -988,6 +988,34 @@ despite other rotations.
 \subsection{Beacon Server}
 \label{sec:beacon}
 
+When a user is discovering a new server, there are two types of lookups that are
+required: (1) mapping from a standard DNS name to a the server's ID; and (2)
+going the other direction. The first direction is straightforward.  The user's
+client makes a TLS connection to the server's name, and retrieves a hostchain.
+The client uses the standard root CAs to verify that the server's certificate 
+matches its DNS name. The returned hostchain is rooted in the server's
+initial public key, and potentially contains several key rotations. The most
+recent key must sign the host's DNS name, allowing the client to verify the
+correspondence between the two. 
+
+Once the server makes an initial mapping of a domain name like
+\texttt{example.com} to a host ID $h$, the user's client writes it down in its
+local database, and it is ``pinned'' going forward. The server can change to a
+new hostname \texttt{example.io} through the normal operation of the
+hostchain. But the original hostname should never be reused by a different
+server.
+
+Sometimes clients need to perform the opposite mapping, from host ID
+to DNS name. Users are allowed to refer to servers by their host ID
+and might choose to do so if they have reason to mistrust the 
+root CAs~\cite{diginotar}. While more sophisticated solutions are possible
+(like DHTs~\cite{chord} and blockchains~\cite{bitcoin}), FOKS opts for a simple
+solution for now. We host a single ``beacon'' server, which is a simple
+server that maps host IDs to DNS names. Clients take these mappings
+with a grain of salt but can verify them via the hostchain protocols
+described above.
+
+
 
 \subsection{Privacy}
 \label{sec:sigchain-viz}
