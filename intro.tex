@@ -1,0 +1,67 @@
+
+\section{Introduction}
+
+In recent years, Signal, iMessage and WhatsApp have proven out the customer
+demand for end-to-end encryptied communication. But despite the success of these
+systems, and their vast improvements over previous, less-secure systems,
+important problems remain unresolved.  Most obviously, questions remain around
+identity. In a recent, high-profile incident, United States government officials
+misused Signal to mistakenly leak matters of national security to the
+press~\cite{signal-hesgeth-leak}. Relying on phone numbers as identifiers is
+only part of the problem; the larger issue, arguably, is that public identities
+are hard to audit and map to public keys, and that large groups are even harder
+to manage.
+
+We see other issues: all the systems mentioned above and many others lock users
+into a walled-garden with a centralized single provider. Outside observers lack
+the ability to experiment with their own servers as part of a security audit.
+Many of these systems lack an unconditional commitment to open-source
+everywhere, closing off parts or all of their systems to third party scrutiny. 
+Single-provider systems further suffer from vendor lock-in. As data is not
+portable, and switching to a competing platform is not supported, the service
+providers have the leverage to ``monetize'' their users as they see fit.
+
+The authors have deep experience with the Keybase system~\cite{keybase}, which
+came at these problems from a different angle. In Keybase, the initial focus was
+on identity, multi-device support, and formation of auditable groups that could
+evolve over time. But Keybase shows the same limitations as Signal, WhatsApp and
+iMessage: it is stuck on a single-provider model.
+
+This paper introduces a new system: the Federated Open Key Service (FOKS).  It
+inherets much from these prior system but inhabits a different point in the
+design space. FOKS provides secure key distribution for users who have multiple
+devices. It allows those users to form groups, and unlike previous systems, for
+those groups to join other groups. Whether managing a user's device cloud, or
+managing the membership of a team, FOKS ensures that a malicious server cannot
+inject invalid members, and that it cannot withhold important revocations and
+deletions.  Many of these features are possible with previous systems, but
+FOKS's major architectural advance is the support of federation. Anyone
+can run a server in the FOKS network. Users can stay siloed on different
+servers, or can form teams that span multiple servers. Federation gives users
+more choice, control and better guarantees. Though servers cannot decrypt or
+sign on behalf of users, they still can see metadata, and often are called upon
+to protect user privacy. Therefore, companies or tight-knit groups have
+good reason to run their own servers, and can do so in the system.
+
+The aim here is to build a general protocol that can scale to the internet, 
+owned by no single party. FOKS aims to be agnostic to hosting provider, much
+like SMTP or HTTP. What those protocols have done for email and the web, FOKS
+aims to do for cryptopgrahic key management and distribution.
+
+This paper introduces and describes the FOKS system. We cover a threat model
+in Section~\ref{sec:threatmodel}, a system design in Section~\ref{sec:design}, 
+the use of cryptography in Section~\ref{sec:crypto}, and some important applications
+in Section~\ref{sec:apps}. The primary goal here is not academic novelty, but
+rather to describe a system that embodies a unique
+and quite useful set of trade-offs for end-to-end encrypted systems.
+However, there are some, to our knowledge, new contributions:
+%
+(1) An exploration of key-rotation for teams that can form
+      nearly arbitrary graphs across federated servers;
+%
+(2) a system for hiding identity and team updates in a larger
+      transparency tree without the need
+      for pseudo-random functions; and
+%
+(3) a new protocol specification language (called Snowpack) that enforces
+  domain separation for cryptographic operations.
