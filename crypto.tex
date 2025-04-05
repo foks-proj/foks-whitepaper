@@ -239,7 +239,7 @@ mechanism, but using \texttt{MLKEM=0} and \texttt{MLKEM=1} in the
 
 \subsubsection{\Yubis}
 
-FOKS supports hardware keys like YubiKey that support the Personal Identity
+FOKS supports hardware keys like \yubi{} that support the Personal Identity
 Verification~\cite{nist-sp-800-73-5} (PIV) standard.  This standard allows the
 device to perform public key cryptopgrahic operations, like ECDSA and
 Diffie-Hellman over the p256 elliptic curve~\cite{nist-fips-186-3}. Though we
@@ -249,7 +249,7 @@ proven problematic for other systems~\cite{jwt-none}, and we would like to avoid
 it as much as possible with FOKS, but we make an exception here for a popular
 hardware standard.
 
-The bigger issue with YubiKeys is: what do to about post-quantum security?  To
+The bigger issue with \yubis{} is: what do to about post-quantum security?  To
 date, we have not seen a wide release of an algorithm like ML-KEM to hardware
 devices, and even if so, we'd like to support older, widely-deployed hardware. 
 
@@ -264,18 +264,18 @@ around existing PIVs as follows:
   \label{step:pq-secret}
 
   \item Select a different retired key management slot to use for classical ECDH over curve p256.
-  Compute ECDH as usually using the YubiKey's hardware.
+  Compute ECDH as usually using the \yubi's hardware.
 
   \item  Combine the secret keys from the previous two steps using the X-wing-style
   derivation scheme from Section~\ref{sec:xwing-key-derivation}.
 \end{enumerate}
 
 An important property of this system is that all of the relevant key material
-lives on the YubiKey; none lives on the user's computer. The YubiKey is all the
+lives on the \yubi ; none lives on the user's computer. The \yubi is all the
 user needs to recover important secrets, even if the computer is lost or suffers
 data loss. Further, this system is no less secure than an encryption scheme
 without PQ-security, as the classical ECDH computation still happens on the
-YubiKey as normal. That is, we are not forcing the user to choose between PQ and
+\yubi{} as normal. That is, we are not forcing the user to choose between PQ and
 hardware security.  However, this scheme has an important shortcoming. If the
 user later reuses the key management slot in Step~\ref{step:pq-secret} for a
 different purpose, and exports the public key $g^x$ from the device, the scheme
@@ -343,7 +343,7 @@ this is only possible if that computer $B$ comes back online after the change, b
 the property should hold.
 
 \item Passphrae recovery: to change the passphrase and recover keys, it is sufficient to know the latest PUK.
- Thus, having a backup paper key or a backup YubiKey should suffice to ``recover'' a passphrase
+ Thus, having a backup paper key or a backup \yubi{} should suffice to ``recover'' a passphrase
  and to allow the user to change it without knowing the old passphrase.
 
 \item As with passphrases, if the PUK is updated, all machines with passphrase-encrypted keys
