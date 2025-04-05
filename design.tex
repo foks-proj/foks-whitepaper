@@ -23,20 +23,20 @@ and one for personal use. Or a web browser might have different profiles (with
 different cookies, preeferences, passwords and history) for the same user.
 
 Each of the users can of course have multiple devices, like a desktop, a laptop,
-a phone, and a \yubi . Additionally, users can have "backup devices", which can
+a phone, and a \yubi . Additionally, users can have ``backup devices,'' which can
 be writted down on paper and stored in a safe place. The system recommends at
 least two devices to prevent data loss. That is, these devices have private keys
 that decrypt data, and the loss of the last key prevents decryption of the data.
 Obviously there is a trade-off here: the more devices, the more likely the user
 will lose one, or have one stolen; the fewer devices, the more likely the user
 will lose all devices and therefore access to data. Some optimal middle ground
-exists, but varies with the users and their behaviors. 
+exists, but varies with users and their behaviors. 
 
 \subsection{Key Hierarchy}
 
 The FOKS key hierarchy sits at the core of the system. It aims to provide users
 with a sequence of symmetric keys shared across all of their devices, so that
-they can store data encrypted with the latest key, and can decrypt (and
+they can store data encrypted (and authenticated) with the latest key, and can decrypt (and
 authenticate) data encrypted with older keys when necessary. Similarly, users in
 a team should share secret keys that users outside their teams cannot see, allowing
 them to share encrypted data via untrusted FOKS servers.
@@ -46,19 +46,19 @@ them to share encrypted data via untrusted FOKS servers.
 When a user sits down at a FOKS client to signup or provision a new device
 for an existing account, she first creates a new key-pair specifically
 for that device. The private key never leaves the device. She shares the public key
-with the FOKS server, who eventually selectively shares it with user users.
+with the FOKS server, who eventually selectively shares it with other users.
 We detail the exact cryptography in Section~\ref{sec:cryptography}.
 
 Hardware keys that support the PIV protocol (like \yubi{} version 5 and later)
 can also be used as device keys. These devices get randomly-generated private
-keys in the factory, written to one of 20 possible "slots." FOKS users select
+keys in the factory, written to one of 20 possible ``slots.'' FOKS users select
 a slot to use, and the client sends the corresponding public key to the FOKS 
-server. Signing and decryption operations happen on the device against the chose
+server. Signing and decryption operations happen on the device against the chosen
 slot. 
 
 \subsubsection{Per-User Keys (PUKS)}
 
-Every user on the FOKS system has one of more per-user keys, or PUKS. A PUKS
+Every user on the FOKS system has one of more per-user keys, or PUKs. A PUK
 is a randomly-generated key-pair whose private key is encrypted for each of
 the device public keys. This way, all current devices can access the current
 PUK secret key, and perform decryptions or signatures for the current PUK public
@@ -68,7 +68,7 @@ a device that has access to the latest PUK can get access easily to all prior
 PUKs.
 
 Once the PUK sequence is estblished, the system has a convenient way to encrypt
-a data for all of the user's device --- it simply encrypts the data for the 
+a data for all of the user's devices --- it simply encrypts the data for the 
 user's latest PUK.
 
 \subsubsection{Per-Team Keys (PTKs)}
@@ -83,7 +83,7 @@ As with PUKs, data that the team shares is encrypted for the team's latest PTK,
 and all members can decrypt it. As we will see in Section~\ref{sec:teams}, teams can
 join other teams, but the key hierarchy works just the same. When team $A$ joins
 team $B$, the secret part of team $B$'s PTK is encrypted for team $A$'s latest PTK,
-so that all members of team $A$ can decrypt $B$'s PTK, and therefore, all of
+so that all members of team $A$ can decrypt $B$'s PTK, and therefore,
 $B$'s encrypted data.
 
 \subsection{Key Roles}
@@ -96,7 +96,7 @@ $B$'s encrypted data.
 
 
 FOKS has a notion of a ``role'' for device keys, PUKs and PTKs. The roles
-are: \owner, \admin, and \reader, but \reader{} keys have a "visibility level"
+are: \owner, \admin, and \reader, but \reader{} keys have a ``visibility level''
 that varies between -32768 and 32767. There is a total ordering among key roles,
 so that $\owner > \admin > \reader$, and between reader keys, $k_1 > k_2$ iff
 $k_1$ has a higher visibility level than $k_2$.
@@ -108,10 +108,10 @@ $j$ if $\role{k} \le \role{j}$.
 The idea here is that the owners of a group get to see all the keys; the admins
 can see the admin and reader keys; and the readers can see keys at or below
 their visiblility level. This configuration allows groups to have
-lower-privileged members, and for users to have lower-privileged devices. At
+lower-privileged members, and for users to have lower-privileged devices. In
 Keybase, a similar but less-flexible property allows ``bots'' into teams, so that
 all the members of the teams can interact with the bots, but the members had
-channels to communicate that the bots aren't privvy to.  For now, all user
+communications that the bots aren't privvy to.  For now, all user
 devices are at the \owner{} role, but we plan to relax this requirement in the
 future.
 
@@ -126,7 +126,7 @@ so that only desired members are in the group, especially if the server
 behave maliciously?
 
 For instance, a malicious server might fool a user into encrypting secret data
-for an invalid device, or team administrator into encrypted data for an invalid
+for an invalid device, or team administrator into encrypting data for an invalid
 user.
 
 \subsubsection{Signature Chains}
@@ -179,7 +179,7 @@ no signatures with PUKs are required.
 
 For any link in the chain, a set of devices is authorized to make further
 updates to the chain. After the first link, the set contains only the first
-device (sometimes called the ``eldest`` device). A link can either add a new
+device (sometimes called the ``eldest'' device). A link can either add a new
 device, or revoke an existing device, updating the set of authorized devices
 accordingly. When clients upload new chainlinks, the server enforces valid
 signatures by authorized devices. When users replay this chain, they perform the
@@ -207,12 +207,12 @@ are analagous to user chains:
 
 Since teams can contain both users and other teams, the actor creating or
 modifying the team can be either a user or a team. In FOKS, a \textit{party}
-refefes to someone or something that can be in a team, so either a user or a
+refers to someone or something that can be in a team, so either a user or a
 team. In field~\ref{item:team-actor}, the link contains the unique identifier of
 the party (which is the user or team ID plus the host ID), and also the key
 making the change. For users, this key is the user's latest PUK at the \owner{}
 role.  For teams, it's the team's latest PTK at the desired source role. That
-is, consider a teams $T$  where users $a$ and $b$ are owners of $T$, $c$ is an
+is, consider a team $T$  where users $a$ and $b$ are owners of $T$, $c$ is an
 admin and $d$ is a reader (at visibility level 0). If $T$ creates a new team $U$
 with source role of \owner, then only users $a$ and $b$ will have access. If
 $T$ creates the new team with source role of \reader, then all users will have
@@ -255,7 +255,7 @@ See Section~\ref{sec:sigchain-viz} for further details about sigchain visibility
 
 As alluded to above, owners have ultimate control over the team. They can add and remove
 members, add other owners, downgrade owners to admins, etc. Admins have more limited 
-control; the have similar control over admins and readers, but cannot: upgrade admins
+control; they have similar control over admins and readers, but cannot: upgrade admins
 to owners, introduce new members as owners, remove existing owners; or downgrade 
 existing owners. Readers cannot make any team modifications but can of course read
 team chains, and can access data protected by the reader's PTKs at their level
@@ -264,7 +264,7 @@ and below.
 Teams, unlike users, can include members located on different servers. Above, in 
 item~\ref{item:party-id}, we include the host ID of the party in the membership change.
 Remote members cannot be admins or owners, but can be readers. This configuration allows
-for convenient data sharing across federation boundaries, but simplifies team management
+for convenient data sharing across federation boundaries but simplifies team management
 relative to an alternative system where remote members can be owners or admins.
 
 Parties making changes to team sign new team chain links much the same way as user devices
@@ -306,15 +306,15 @@ chainlinks out of whole cloth and interleaving those with legitimate links. The
 protection simply is that the server does not have the private keys the parties
 use for signing. We assume those never leave the devices they are made on. By these 
 mechanisms, the server cannot extend a chain or replace an inner link. The server can
-of course create a brand new chain, and might attempt clients into using this chain
-rather than the one the users intended. This case of "mistaken identity" is one
+of course create a brand new chain, and might trick clients into using this chain
+rather than the one the users intended. This problem of ``mistaken identity'' is one
 of \textit{naming}, which we cover in Section~\ref{sec:naming}.
 
 The server can nonetheless \textit{withhold} links at the end of a chain, 
 or show some clients the full chains, and other various subchains, with the
-hope of forcing them to ``fork'' the sigchain into 2 incompatible directions.
+hope of forcing them to ``fork'' the sigchain into two incompatible chains.
 We need a mechanism to force the server's hand into showing a consistent 
-chain tail to all users who request it. This is where the Merkle tree
+chain tail to all users who request it. This is where the Merkle Tree
 comes in. FOKS servers expose a Merkle Tree that forces the server to commit
 to a coherent state of the system, across all parties, preventing selective
 rollback of sigchains. 
@@ -329,17 +329,17 @@ the tree (called the previous ``epoch''), a logarithmicly-sized set of pointers
 to previous roots further back in history, and also the tail of the 
 server's hostchain (see Section~\ref{sec:hostchains}). The hash of this
 root block is now a summary of the entire system. The server attempts to publish
-root blocks immediately after every sigchain update, but sometimes batches 
+root blocks immediately after every sigchain update but sometimes batches 
 them for efficiency. In general, roots should be produced no more than
 15 seconds after a sigchain update to keep clients responsive (since sometimes
 they need to wait for updates).
 
 \subsubsection{Root Chaining}
 
-Since many users and teams might be active on a signle FOKS server, 
+Since many users and teams might be active on a single FOKS server, 
 the user has no reason to download every root Merkle epoch. Rather,
 the user will experience long gaps between epochs, especially if going
-periodically offline. Whenenever a client downloads a root block,
+periodically offline. Whenenver a client downloads a root block,
 say at epoch $i$, it writes it to local storage. When the client later
 downloads another root block, call it $k$, the client enforces
 that $i < k$. It also sends up the paremeter $i$, and the server
