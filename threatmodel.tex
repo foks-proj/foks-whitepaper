@@ -19,7 +19,7 @@ key material. In the case of hardware keys (like YubiKeys), or backup-keys
 written on paper, the user has less protection during comrpomise. Regardless,
 once the user revokes the lost device, keys should rotate so that data is secure
 going forward (this property is known post-compromise security). In some cases,
-past data might be safe from the attacker (this property is known as forward-secrecy).
+past data might be safe from the attacker (this property is known as forward-secrecy),
 but the specifics depend on the trustworthiness of the server (see below). Similarly, revoked
 keys on lost devices lose their signing power, and other devices will not accept
 their signatures going forward.
@@ -44,18 +44,17 @@ might have privileged access to the underlying infrascture.
 If servers behave honestly, the FOKS system works securely as expected.  If
 servers behave maliciously, they can deny access to data through a variety of
 mechanisms: they can go offline, they can withoold data, or they can subtly
-current server-resident data to confuse clients. In this last case, the system's
+corrupt server-resident data to confuse clients. In this last case, the system's
 security design should prevent the clients from leaking secrets or accepting
 unauthorized changes to data. But as in the other more obvious cases, the
 clients will lose access to their data.
 
 When servers are behaving honestly, they can provide clients with
 forward-secrecy. That is, if honest servers throw away data encrypted with old
-keys, an attackets with access to private keys cannot rcannot ecover past data.
-This property is an improvement over that offered by the Keybase system, which
-assumed the worst in the case of a comrpomise. If we assume on the other hand
-that an attacker who steals a private key operates in cohoots with the server,
-then we cannot offer any guarantees about forward secrecy.
+keys, attackers with access to private keys cannot cannot recover past data.  If
+we assume on the other hand that an attacker who steals a private key operates
+in cohoots with the server, then we cannot offer any guarantees about forward
+secrecy.
 
 Servers do not trust each other. If one server becomes corrupted, it has no
 bearing on the other servers in the system. In other words, we assume attackers
