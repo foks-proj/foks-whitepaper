@@ -152,6 +152,7 @@ a signature over the following data:
     \item \label{item:prev} The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (which is 1 for the eldest link)
     \item A commitment to the next random tree location (see Section~\ref{sec:location-hiding})
+      \label{item:next-tree-location}
     \item The current Merkle root hash (see Section~\ref{sec:merkle})
     \item The user's ID and the server's host ID (see Section~\ref{sec:hostchains})
     \item \label{item:puk} The user's new PUK public keys
@@ -193,7 +194,7 @@ are analagous to user chains:
     \item The hash of the previous link in the chain (nil for the eldest)
     \item The current sequence number of the sigchain (starting at 1)
     \item A commitment to the next random tree location
-      \label{item:next-tree-location}
+      \label{item:next-tree-location-teams}
     \item The current Merkle root hash 
     \item The team's ID and the server's host ID
     \item The user (or team) ID, host ID, and PUK (or PTK) of the actor making the change
@@ -362,10 +363,11 @@ the last link in the sigchain (the $i$th). $t$ is an enumerated value that
 specifies which type of chain for $p$ this is. As we will see in 
 Section~\ref{sec:subchains}, each party has multiple chains.  $r_i$ is a random
 value that was generated when the $(i-1)$ link was published. The $(i-1)$ link
-contains the value $H(r_i)$ in the field~\ref{item:next-tree-location} from
+contains the value $H(r_i)$ in the field~\ref{item:next-tree-location}
+(or~\ref{item:next-tree-location-teams} for teams) from
 Section~\ref{sec:sigchains}. This simple mechanism achieves the same end as the
-PRF in CONIKs and SEEMLess, in that it's unpredictable in the tree where a
-team's sighcains is stored. This unpredictability prevents data leaks that would
+pseudo-random function in CONIKs and SEEMLess: it hides the sigchain tail randomly
+in the tree. This unpredictability prevents data leaks that would
 otherwise allow the owners of neighboring nodes in the tree to deduce when $p$'s
 chain advances. 
 
@@ -377,7 +379,7 @@ returns neighbors necessary to trace the path back to the tree root. The server
 also returns the sequence $(r_2, r_3, \dots r_{n+1})$, so the client can verify
 they match the commitments in the sigchain.  Note the first link location is not
 randomized with $r_1$, since there was no $0$th link to commit to $r_1$.
-However, the eldest link's placements is already essentially random since the
+However, the eldest link's placement is already essentially random since the
 party's ID $p$ is generately randomly at the first link (and is predictable
 thereafter).
 
@@ -385,7 +387,7 @@ thereafter).
 \subsubsection{Hostchains}
 \label{sec:hostchains}
 
-Servers maintain hostchains so they can manage and rotate their signig keys, DNS names,
+Servers maintain hostchains so they can manage and rotate their signing keys, DNS names,
 and TLS keys. Like team and user chains, hostchains form a cryptographic chain, ensuring
 they can only be replayed in the intended order, even if modified in transit. Chain links
 have sequence numbers and contain the cryptographic hashes of previous links. When an
@@ -394,7 +396,7 @@ This public key becomes the host's ID. The first chainlin contains this hostkey 
 subkeys, one that serves as a TLS CA for the server, and one used to sign \textit{zonefiles}
 for the server. The \textit{zonefile} contains the DNS names for the server's various services.
 Subsequent chainlinks can change any of these keys
-or subkeys, as long as they are signed with keys valid up until that point. clients
+or subkeys, as long as they are signed with keys valid up until that point. Clients
 play these links back to map host IDs to DNS names as they establish connections
 to new servers. 
 
@@ -410,7 +412,7 @@ to new servers.
 We have already seen two sigchains: the user chain and the team chain. Each of
 these chains has a subchain. Users have a \textit{user settings subchain} in
 addition to the user chain. Currently, this chains contains information about
-the user's passphrase, which can optionally be used to locally encrypt device
+the user's passphrase, which can optionally locally encrypt device secret
 keys (see Section~\ref{sec:passphrase}). Whenever the user changes her
 passphrase, she writes a new link to the chain, so that the server cannot roll
 back her passphrase information to an earlier setting.  Chain locations for
@@ -419,8 +421,8 @@ links $i_2$ and above are computed as in the user chain itself, but with $t =
 since otherwise, its location in the tree is predictable given the user ID.
 
 Recall that the eldest user chain link contains a ``subchain tree location seed
-commitment``(\ref{item:stlsc}). When creating the link, the client software
-generates a random valaue $s$, and puts the hash $H(s)$ into the chain link.
+commitment'' (\ref{item:stlsc}). When creating the link, the client software
+generates a random value $s$, and puts the hash $H(s)$ into the chain link.
 Then $r_1 = H(s, \settings)$, and the Merkle Tree stores the first link of 
 $u$'s user settings chain at location $H(u, 1, \settings, r_1)$. The server knows 
 $s$, and $u$ knows $s$, so both can compute and verify the random location of 
@@ -462,9 +464,9 @@ correspond to. The server stores the user ID $u$ at the Merkle Tree
 location $H(n, 1, \textsf{name}, nil)$, and the sigchain for $u$
 commits to $n$ at~\ref{item:name}. When another user loads $u$, she
 looks up the Merkle leaves at location $H(n, 1, \textsf{name}, nil)$
-and $H(n, 2, \textsf{name}, nil)$, confirming that the first location
-maps to $u$, and that the second location is absent from the tree,
-confirming the name hasn't be remapped. The loader then confirms
+and $H(n, 2, \textsf{name}, nil)$, confirming that: (1) the first location
+maps to $u$; and (2) the second location is absent from the tree,
+or rather, the name hasn't be remapped. The loader then confirms
 that the name matches the commitment in $u$'s sigchain. 
 
 This system ensures a 1-to-1 mapping between a name $n$ and a
@@ -489,10 +491,10 @@ keys as ``sidecar'' data.
 \label{sec:kex}
 
 The most complicated case is device-to-device provisioning. A user has an
-active account on device $D_1$ and uses it to directly provision device $D_2$.
-We call the existing device, $D_1$, the ``provisioner'', and the new device, $D_2$,
+active account on device $d_1$ and uses it to directly provision device $d_2$.
+We call the existing device, $d_1$, the ``provisioner'', and the new device, $d_2$,
 the ``provisionee.''
-Device $D_2$ generates a new device key $k_2$ and prompts the user for
+Device $d_2$ generates a new device key $k_2$ and prompts the user for
 a device name, which is $n_2$.
 Both devices pick random 125-bit session keys, call them $s_1$ and $s_2$. Both clients
 show these keys to the user, using a simple encoding scheme we call
@@ -511,8 +513,8 @@ or $s_1$ on device $D_2$. In both cases, the message flow is as follows:
 
 \begin{center}
 \begin{tikzpicture}[>=stealth]
-  \node (d1) at (0,6) {$D_1$ (provisioner)};
-  \node (d2) at (6,6) {$D_2$ (provisionee)};
+  \node (d1) at (0,6) {$d_1$ (provisioner)};
+  \node (d2) at (6,6) {$d_2$ (provisionee)};
 
   \draw[->] ($(d1)+(0,-1)$) -- node[above] {[start]} ($(d2)+(0,-1)$);
   \draw[->] ($(d2)+(0,-2)$) -- node[above] {hello: $k_2$, $n_2$} ($(d1)+(0,-2)$);
@@ -526,19 +528,19 @@ or $s_1$ on device $D_2$. In both cases, the message flow is as follows:
 \end{center}
 
 The first message, ``start'', is optional and only needed in the case that $s_2$
-is entered on device $D_1$. In the ``hello'' message, the provisionee sends its
+is entered on device $d_1$. In the ``hello'' message, the provisionee sends its
 new key and desired device name over to the provisioner. The provisioner then
 makes a sigchain link, $l$, and in the ``please sign'' message, asks the
 provisionee to sign it with $k_2$, the new device key. The provisoner also
 includes token $t$ so the provisionee can load the user's sigchain from the
 server. In the ``please counter-sign'' message, the provisionee returns the
-signed link and asks the provisioner sign it a second time with $k_1$, $D_1$'s
+signed link and asks the provisioner sign it a second time with $k_1$, $d_1$'s
 device key. Finally, the provisioner can post the new signed sigchain link $l$
 to the server, including encryption of the latest PUK for $k_2$ with $l$. Once
 the provisionee receives the ``done'' message, it can load the user's PUKs from
 the server, and decrypt them with $k_2$.
 
-Though messages between $D_1$ and $D_2$ could use interesting local peer-to-peer
+Though messages between $d_1$ and $d_2$ could use interesting local peer-to-peer
 protocols, we employ a simpler, more reliable strategy. The FOKS server proxies
 all of these messages. One device sends a message, while the other polls for the
 next message in the sequence. Let $s^{*}$ be the session key that was input on
@@ -550,8 +552,8 @@ key exchange (PAKE) rather than this simple $s_1$ / $s_2$ mechanism. The
 observation is that the secret phrases, which users have to type until
 smart-phone apps are built, are quite long and could be much shorter with PAKEs.
 We considered these constructions but rejected them for FOKS, since we are
-concerned the PAKEs can be easily DOSed. That is, the provisionee $D_2$ is not
-authenticated to the server since the user hasn't logged in on $D_2$ yet; this
+concerned the PAKEs can be easily DOSed. That is, the provisionee $d_2$ is not
+authenticated to the server since the user hasn't logged in on $d_2$ yet; this
 login happens naturally as a result of the provisioning process. Thus, there is
 nothing to stop an attacker from targeting a user and entering bad PAKE codes
 before the legimiate user can enter the correct code. Such an attack would not
@@ -559,7 +561,7 @@ break the integrity of the protocol, but could prevent the user from ever
 successfully provisioning.
 
 Note that several of these provisioning sessions can happen concurrently on the
-same the server. $D_1$ and $D_2$, with the server's assistance, must separate
+same the server. $d_1$ and $d_2$, with the server's assistance, must separate
 their messages from other currently active clients.  They therefore tag each
 message in the exchange with the channel identifier $H(s^{*})$, where $H$ is a
 one-way function like SHA2. This channel identifier is unguessable for 
@@ -589,9 +591,9 @@ which we cover here in more detail.
 As described in Section~\ref{sec:sigchains}, teams are composed of parties
 that can span multiple federated servers. A team has a home server, which 
 hosts its public keys, encrypted secret keys, sigchain, and Merkle Tree.
-An importantly, all the admins and owners --- those who have the ability
+And importantly, all the admins and owners --- those who have the ability
 to change the team --- must be on the same home server. However, team readers
-can join the team from across the Internet.
+can join the team from across the internet.
 
 Because readers can be local or remote, important team protocols, like addition
 and removal, must work with more generality, as we cannot assume that the reader
@@ -602,9 +604,9 @@ cooperation among independently administered servers under our thread model
 \subsubsection{Cycle Avoidance}
 \label{sec:team-index-range}
 
-One problem in particular the presents itself immediately: potential cycles.
+One problem in particular the presents itself immediately: cycles.
 Imagine a simple case, with three hosts $h_1$, $h_2$ and $h_3$, and three teams
-on those host, respectively, $t_1$, $t_2$ and $t_3$. If $t_1$ adds $t_2$ as a
+on those hosts, respectively, $t_1$, $t_2$ and $t_3$. If $t_1$ adds $t_2$ as a
 reader, $t_2$ adds $t_3$ as a reader, and $t_3$ adds $t_1$ as a reader, there is
 now a cycle in the team membership graph. That cycles are bad is not immediately
 obvious, but we must consider what happens in a rekey scenario.
@@ -613,10 +615,10 @@ Imagine at the start of the sequence, team $t_1$ consists of two owners --- call
 then $u$ and $v$ --- and no other members. Team $t_2$ consists of a single owner
 $x$, and team $t_3$ consists a single owner $y$. Focus on user $v$, who will
 eventually be removed.  At the start $v$ has access to $t_1$'s reader PTK at
-generation 1, call it $k^{1}$.  Next, $x$ adds the readers of $t_1$ to $t_2$
+generation 1, call it $k^_1$.  Next, $x$ adds the readers of $t_1$ to $t_2$
 as readers. As a result, $v$ gets access via $k_1$ to $t_2$'s reader PTK,
 call it $k_2$. Next, user $y$ adds the readers of $t_2$ to $t_3$ as readers,
-giving $v$ access to $t_3$'s PTK $k_3^{1}$ transitively via $k_1$ and $k_2$.
+giving $v$ access to $t_3$'s PTK $k_3$ transitively via $k_1$ and $k_2$.
 Finally, $u$ completes the cycle, adding the readers of $t_3$ to $t_1$ as readers.
 Figure~\ref{fig:cycle1} shows this initial configuration. 
 
@@ -637,14 +639,14 @@ A link from $k$ to $j$ means that knowing $k$ gives one access to $j$, i.e., tha
 \end{figure}
 
 
-Everything up until now is working as planned, but now consider what happens when
+Everything up until now is working as planned, but consider what happens when
 $u$ removes $v$ from $t_1$. What should happen is that all 3 teams should 
 rotate so that $v$ loses access to their most recent reader PTKs. But in practice, this
 objective cannot be achieved. Playing out the scenario, $u$ rotates $t_1$'s reader PTK
 from $k_1$ to $k_1'$. It encrypts $k_1'$ for $k_1$ so that the remaining 
 members can still access old data. It also encrypts $k_1'$ for $t_2$'s most recent reader
 PTK, which remains $k_2$. See Figure~\ref{fig:cycle2} for what this new configuration looks like.
-One thing to notice immeidately is that any node on the graph is reachable from any other. That is,
+One thing to notice immediately is that any node on the graph is reachable from any other. That is,
 if user $v$ knows $k_1$ (which he had access to before $u$ removed him), then he can still
 decrypt any other key on the graph, including $k_1'$, which he reach via
 $k_1 \rightarrow k_2 \rightarrow k_3 \rightarrow k_1'$. So in a deep sense, the 
@@ -736,10 +738,10 @@ First, $t_1$ adds $t_2$ as a reader, and $t_3$ adds $t_4$ as a reader.
 So far so good. If $t_2$ adds $t_3$ as a reader, or $t_4$ adds
 $t_1$ as a reader, we still are cycle-free.  But if the two additions
 happen roughly simultaneously, a cycle is formed, and there is no easy
-way for any of the hosts involves to detect it.
+way for any of the hosts involved to detect it.
 
 The most blunt and naive solution is for each team to get an ``index'', which
-which is simply a natural number. This index cannot change once assigned, and
+is simply a natural number. This index cannot change once assigned, and
 $t_1$ can only add $t_2$ iff $t_2$'s index is less than $t_1$'s. This simple
 rule prevents cycles, but is inflexible and doesn't allow much play in the team
 graph as the system evolves. FOKS opts for a slightly more flexible solution of
@@ -750,7 +752,7 @@ $[a,b)$, where $a,b \in \mathbb{Q^{+}}$. $b$ can take on the special value $\inf
 A team can always restrict its range but can never expand it. The rule for
 addition then becomes that $t_1$ can add $t_2$ iff the lower bound of $t_1$'s
 range is greater than the upper bound of $t_2$'s range. The rule guarantees that
-whereever $t_1$ and $t_2$'s indices eventually settle, $t_1$'s index is greater
+wherever $t_1$ and $t_2$'s indices eventually settle, $t_1$'s index is greater
 than $t_2$'s.
 
 All teams get the initial default range of $[1,\infty)$. When a team administrator
@@ -787,12 +789,12 @@ First, the administrator creates a team certificate with the fields:
     \item The team's index range
 \end{itemize}
 %
-The adminstrator then signs this certificate payload with both the current PTK, 
+The administrator then signs this certificate payload with both the current PTK, 
 and also the original PTK, whose hash is the team's ID.  If the PTK hasn't rotated,
 then of course only one signature suffices. In totality, the above data and the signatures
 are quite large, so we introduce one layer of indirection to make them shorter. 
-The administrator posts the signed certificate it's home server, and then formulates
-an invitattation as: (1) the hash of the above data; and (2) the host's ID. The
+The administrator posts the signed certificate to its home server, and then formulates
+an invitation as: (1) the hash of the above data; and (2) the host's ID. The
 resulting token can look something like this:
 %
 \begin{verbatim}
@@ -823,8 +825,8 @@ that these fields are correct, and leave the team if not.  By accepting the
 invitation, be it malicious or otherwise, $p$ is primarily giving access to
 reading its sighcain. It must decide whether or not this is a good idea on the
 basis of who sent the team invitation in the first place. This problem can
-recursively be solved in FOKS, by a different team, or by trusted channel on a
-different platform, like a secure team chat.
+recursively be solved in FOKS, perhaps by a different team, or by trusted
+channel on a different platform, like a secure team chat.
 
 If $p$ decides to accept this invitation, there are four subcases to consider:
 
