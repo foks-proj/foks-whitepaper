@@ -877,9 +877,9 @@ Team Membership Chain as above.
 \paragraph{Admitting into Teams}
 
 For a given team $t$, the owners and administrators see an inbox of pending
-accepted invitations. For each of these, the administratos makes a yes/no
+accepted invitations. For each of these, the administrator makes a yes/no
 decision as to whether the team can be admitted into the team, and also what
-it's role should be in the new team. Recall some restrictions on these roles: 
+its role should be in the new team. Recall some restrictions on these roles: 
 (1) remote parties can only be readers; and (2) administrators cannot add new
 members to teams as owners. In any of the four subcases above, the administrator
 gets the necessary access to play the accepted party's sigchain; as such,
@@ -903,17 +903,17 @@ new encryption of these PTKs for the remaining members of the team.
 
 The trickier case is the second, since the rotations happen asynchronously. Say
 that user $u$ is a member of team $t_1$ which is in turn a member of team $t_2$.
-Now say user $u$ revokes a device, mayb because it was lost or stolen. Upon
+Now say user $u$ revokes a device, maybe because it was lost or stolen. Upon
 revocation, his PUKs will rotate. Eventually the PTKs for $t_1$ must rotate,
 which will eventually trigger a rotation for $t_2$. But there are several
-reasons these rotates might not be immediate. Perhaps all the relevant
-adminstrators (who are authorized to perform the rotations) are offline. Or
+reasons these rotations might not be immediate. Perhaps all the relevant
+administrators (who are authorized to perform the rotations) are offline. Or
 maybe $t_1$ or $t_2$ is hosted on a different server which is currently offline
 for maintenance. Since it is clear that some cascading team key rotations must
 be done asynchronously, we simplify the FOKS systems by having \textit{all} team
 rotations happen asynchronously along the same code paths.
 
-Every FOKS clients polls all reachable teams in a background loop. It starts 
+Every FOKS client polls all reachable teams in a background loop. It starts 
 with teams in the user's team membership chain, then recursively loads all teams
 and their associated membership chains, in a breadth-first manner.  For each
 team encountered where the user can act as an administrator, either directly or
@@ -935,7 +935,7 @@ users should not trust the servers to faithfully recount to them which
 teams they are members of; if they did, dishonest servers could silently
 supress team rotation through omission. Instead, the Merkle Tree and sigchain
 append-only properties give users guarantees that servers aren't tampering
-1Gwith their view of team memberships.
+with their view of team memberships.
 
 Also note that to perform this ongoing key rotation process, all team
 administrators need ongoing access to the sigchain of team's members. Thus, the
@@ -947,7 +947,7 @@ remain.
 \label{sec:removal-keys}
 
 When users are removed from teams, they should no longer be able to load the team's
-sigchain. But what's to stop a server from falselyclaiming the user was removed, thereby 
+sigchain. But what's to stop a server from falsely claiming the user was removed, thereby 
 preventing the user from rotating the team as described in Section~\ref{sec:clkr}?
 We here discuss ``Team Removal Keys'', which allow a team administrator to prove
 to a removed team member that they were legitimately removed, rather than falsely
@@ -976,7 +976,7 @@ in the team chain, or if the MAC of the removal statement fails, the software
 can post a warning to the user's client, saying that it suspects some form
 of server tampering.
 
-Members $p$'s team removal key is not rotated when $p$ rotates their PTK or PUK;
+Member $p$'s team removal key is not rotated when $p$ rotates their PTK or PUK;
 nor is it rotated when the admins or owners of the team change. Lack of rotation
 opens the window for an attack; a malicious server collaborating with an
 attacker who gains access to a stolen device can recover the team removal key
@@ -1011,7 +1011,7 @@ despite other rotations.
 
   % Right-side box
   \node (revoke) at (3, -4)
-       {revoke $d_1$, \\ rotate $u_2 \rightarrow u_3$};
+       {revoke $d_1$\\ rotate $u_2 \rightarrow u_3$};
   
   % Edges
   \draw[-] (revoke) --  ($(3,0)$);
@@ -1044,7 +1044,7 @@ with device $d_1$, and then revoke it shortly thereafter. The messages might
 signature might not be reflected in the Merkle Tree at the time of the
 revocation. FOKS does not block signature creation on Merkle Tree production.
 For efficiency's sake, updates to the Merkle Tree are batched and might lag
-behind several seconds. To address this issuec challenge, the FOKS server
+behind several seconds. To address this challenge, the FOKS server
 rejects signatures from devices or PUKs if there are associated signatures still
 outstanding and not reflected in the Merkle Tree. Of course a dishonest server
 can intentionally fail in this capacity, which might cause signature chains to
@@ -1061,14 +1061,14 @@ this restriction in place.
 \label{sec:beacon}
 
 When a user is discovering a new server, there are two types of lookups that are
-required: (1) mapping from a standard DNS name to a the server's ID; and (2)
-going the other direction. The first direction is straightforward.  The user's
-client makes a TLS connection to the server's name, and retrieves a hostchain.
-The client uses the standard root CAs to verify that the server's certificate 
-matches its DNS name. The returned hostchain is rooted in the server's
-initial public key, and potentially contains several key rotations. The most
-recent key must sign the host's DNS name, allowing the client to verify the
-correspondence between the two. 
+required: (1) mapping from a standard DNS name to a the server's ID; and (2) the
+other direction, mapping from a host ID to a DNS name. The first direction is
+straightforward.  The user's client makes a TLS connection to the server's name,
+and retrieves a hostchain.  The client uses the standard root CAs to verify that
+the server's certificate matches its DNS name. The returned hostchain is rooted
+in the server's initial public key, and potentially contains several key
+rotations. The most recent key must sign the host's DNS name, allowing the
+client to verify the correspondence between the two. 
 
 Once the server makes an initial mapping of a domain name like
 \texttt{example.com} to a host ID $h$, the user's client writes it down in its
@@ -1096,8 +1096,8 @@ sigchain of any other user $v$ on the system, and can learn how many devices $v$
 has, when those devices were added to $v$'s sigchain, and the names of these
 devices. Howver, team membership was private, so $u$ could only load team $t$'s
 sigchain, or learn team $t$'s name, if $u$ is on team $t$.  Zoom's
-system~\cite{zoom-privacy} is derived from Keybase's, by because it caters to
-enterprise settings, opts for more privacy, obscuring most deatils about user's
+system~\cite{zoom-privacy} is derived from Keybase's, but because it caters to
+enterprise settings, it opts for more privacy, obscuring most deatils about user's
 identities.
 
 As described above, FOKS takes, by default, the more privacy-respecting
@@ -1111,11 +1111,11 @@ that $v$ can always directly add $u$ to a team, and if $u$ is unhappy with this
 situation, he can leave. This configuration might work well for a
 company-specific server.
 
-Another important privacy feature is how device names are handled. As
-described in Section~\ref{sec:sigchains}, users do not write 
-device names directly into sigchain links.  Instead, when provisioning
-a device name $n$, the user picks a random 32-byte value $r$, and publishes
-$Hmac(n, r)$ into the sigchain. On playback, the server returns $r$ and $n$, 
-so the user can check it's the same value as intended. If the user later
-regrets the choice of $n$, the server can throw $n$ and $r$ away while
-still allowing playback of the sigchain.
+Hiding and allowing deletion of device names is also important for privacy.  As
+described in Section~\ref{sec:sigchains}, users do not write device names
+directly into sigchain links.  Instead, when provisioning a device name $n$, the
+user picks a random 32-byte value $r$, and publishes $H(n, r)$ into the
+sigchain. On playback, the server returns $r$ and $n$, so the user can check
+it's the same value as intended. If the user later regrets the choice of $n$,
+the server can throw $n$ and $r$ away while still allowing playback of the
+sigchain.
