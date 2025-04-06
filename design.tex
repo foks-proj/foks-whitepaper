@@ -615,7 +615,7 @@ Imagine at the start of the sequence, team $t_1$ consists of two owners --- call
 then $u$ and $v$ --- and no other members. Team $t_2$ consists of a single owner
 $x$, and team $t_3$ consists a single owner $y$. Focus on user $v$, who will
 eventually be removed.  At the start $v$ has access to $t_1$'s reader PTK at
-generation 1, call it $k^_1$.  Next, $x$ adds the readers of $t_1$ to $t_2$
+generation 1, call it $k_1$.  Next, $x$ adds the readers of $t_1$ to $t_2$
 as readers. As a result, $v$ gets access via $k_1$ to $t_2$'s reader PTK,
 call it $k_2$. Next, user $y$ adds the readers of $t_2$ to $t_3$ as readers,
 giving $v$ access to $t_3$'s PTK $k_3$ transitively via $k_1$ and $k_2$.
@@ -1100,7 +1100,7 @@ system~\cite{zoom-privacy} is derived from Keybase's, but because it caters to
 enterprise settings, it opts for more privacy, obscuring most deatils about user's
 identities.
 
-As described above, FOKS takes, by default, the more privacy-respecting
+As described above, FOKS takes by default the more privacy-respecting
 approach, similar to that of Zoom's system. User $u$ can load $v$'s sigchain
 only if $u$ allows it. The team invitation flow~\ref{sec:invitation} is an
 example of how $v$ shares a view of his sigchain only as required.  However,
@@ -1111,7 +1111,7 @@ that $v$ can always directly add $u$ to a team, and if $u$ is unhappy with this
 situation, he can leave. This configuration might work well for a
 company-specific server.
 
-Hiding and allowing deletion of device names is also important for privacy.  As
+Hiding and allowing deletion of device names is also important for privacy. As
 described in Section~\ref{sec:sigchains}, users do not write device names
 directly into sigchain links.  Instead, when provisioning a device name $n$, the
 user picks a random 32-byte value $r$, and publishes $H(n, r)$ into the

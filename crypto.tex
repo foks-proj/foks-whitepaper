@@ -20,16 +20,16 @@ or undefined behavior due to parsing and encoding bugs~\cite{heartbleed2014durum
 To address these threats, and at the same time to provide an convenient language for 
 defining RPC protocols, we introduce the Snowpack Language~\cite{snowpack}, which is influenced
 by protobufs~\cite{protobuf}, Framed Msgpack-RPC as used in Keybase~\cite{keybase}
-and Cap'n Proto~\cite{capnproto}. A further prooperty we insist upon is support
+and Cap'n Proto~\cite{capnproto}. A further property we insist upon is support
 for backwards and forwards compatibility. Since FOKS is a federated system, we have 
 no expectations that upgrades will happen in lockstep. The protocol itself must behave
-well an any number of partially-upgraded configurations.
+well in any number of partially-upgraded configurations.
 
 \subsubsection{Structures}
 \label{sec:snowpack-structures}
 
 By way of example, see Figure~\ref{fig:group-change} for the definition of a sigchain link both for teams
-and users in the Snowpack language. Any constant of the form \texttt{@1} or \texttt{0x8fbf37f586b0bc6e}
+and users in the Snowpack language. Any constant of the form \texttt{@1} or \texttt{@0x8fbf37f586b0bc6e}
 is meant to be \textit{immutable}. Once written down in the protocol, it should never change. For instance,
 look at the first field in the structure: \texttt{chainer @0 : HidingChainer;}. The \texttt{@0} indicates that this
 field will take the 0th slot in the encoded version of the structure. Future editors of this file must
@@ -77,7 +77,7 @@ protocol specification files.
 
 In the definition of the \texttt{GroupChange} structure from
 Figure~\ref{fig:group-change}, note the 64-bit integer
-\texttt{0x8fbf37f586b0bc6e}. This is a randomly-generated number that serves as
+\texttt{@0x8fbf3...}. This is a randomly-generated number that serves as
 a \textit{domain separator}. We refer to it below as unique type identifier
 (UTID). Though domain specifiers are optional in the Snowpack language, when a
 structure provides it, the snowpack compiler fills in five possible
@@ -161,13 +161,13 @@ encryption is a hybrid of Diffie-Hellman over
 Curve25519~\cite{cryptoeprint:2011:141} and MLKEM~\cite{nist-fips-203} using a
 construction similar to X-Wing~\cite{xwing}, but with a different binary
 encoding format and constants. Thus, in practice, all device keys, PUKs,
-PTKs, and so are are not a single keypair, but rather a triple: an EdDSA 
+PTKs, and so on are not a single keypair, but rather a triple: an EdDSA 
 keypair, a Curve25519 keypair, and an MLKEM keypair. Wherever public keys
 are introduced, an EdDSA signature over the Curve25519 and MLKEM public keys
 is produced to bind them together.
 
 The exact derivation of the hybrid encryption secret key is specified in 
-Snowpack, using the structure shon in Figure~\ref{fig:xwing}. Hasn inputs are:
+Snowpack, using the structure shown in Figure~\ref{fig:xwing}. Hash inputs are:
 the domain separator (UTID); a version number; the shared key exchanged via KEM;
 the shared Diffie-Hellman key; the receiver's public keys; and the sender's
 public DH key. Though everywhere in the project we use SHA512/256, here we 
@@ -229,7 +229,7 @@ variant KeyDerivation switch (t: KeyDerivationType) @0xd35cdcc95caef674 {
 \end{figure}
 
 For example, to make a new PTK, the team adminstrator picks a random 32-byte
-seed value.  When ever the PTK is used in a symmetric context (like for
+seed value.  Whenever the PTK is used in a symmetric context (like for
 encrypting older PTKs), the key derivation uses \texttt{KeyDerivationType =
 SecretBoxKey} as an HMAC input.  Similarly for using the PTK as a signing key.
 All derived keys are also 32-bytes with the exception of the ML-KEM key, which
@@ -253,7 +253,7 @@ The bigger issue with \yubis{} is: what do to about post-quantum security?  To
 date, we have not seen a wide release of an algorithm like ML-KEM to hardware
 devices, and even if so, we'd like to support older, widely-deployed hardware. 
 
-Since there are no perfoct solutions here, we have designed a PQ-secure system
+Since there are no perfect solutions here, we have designed a PQ-secure system
 around existing PIVs as follows:
 
 \begin{enumerate}
@@ -313,7 +313,7 @@ parameters depend on the application, and are shown in Table~\ref{tab:hesp-param
 
 \subsection{Secret Key Management}
 
-Secret keys derives from 32-byte seeds, which never leave the device they are created
+Secret keys derive from 32-byte seeds, which never leave the device they are created
 on (with the possible exception of backup keys, which are written down on paper).
 We discuss here how the FOKS client stores these secret seeds persistently. 
 
@@ -342,12 +342,13 @@ an attacker gets the old passphrase and all server data, they still can't decryp
 this is only possible if that computer $B$ comes back online after the change, but assuming that
 the property should hold.
 
-\item Passphrae recovery: to change the passphrase and recover keys, it is sufficient to know the latest PUK.
+\item Passphrase recovery: to change the passphrase and recover keys, it is sufficient to know the latest PUK.
  Thus, having a backup paper key or a backup \yubi{} should suffice to ``recover'' a passphrase
  and to allow the user to change it without knowing the old passphrase.
 
 \item As with passphrases, if the PUK is updated, all machines with passphrase-encrypted keys
-  should eventually rotate (when they come online) so that they cannot be decrypted with an old PUK
+  should eventually rotate (when they come online) so that they cannot be decrypted with an old PUK.
+
 \end{enumerate}
 
 \label{sec:passphrase}
@@ -395,9 +396,9 @@ key $s_0$ for the user's current PUK. We include $\pk{p_0}$ in the plaintext for
 we will see shortly. After the client creates encryptions $e_0$, $f_0$, and $g_0$, it sends them
 up to the server, for later user on this and other devices.
 
-At Epoch 1, we have passphrase stationary at $p_0$  but the user's PUK is rotated from $u_0$ to $u_1$.
+At Epoch 1, we have the passphrase stationary at $p_0$  but the user's PUK is rotated from $u_0$ to $u_1$.
 We will make a SKMWK $r_1$ and a new session key $s_1$. $s_1$ will be encrypted for the user's
-new PUK and for the user's existing passphrase. This user might have not have input their
+new PUK and for the user's existing passphrase. This user might not have input their
 passphrase on this machine, and it would annoy the user to prompt for it for a seemingly
 unrelated operation. For this reason, we included $\pk{p_0}$ in the plaintext of $g_0$, which
 the user can decrypt with access to the old PUK $u_0$. The new encryptions are then:

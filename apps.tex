@@ -61,20 +61,21 @@ we have found the appropriate parent directory $d$. The client gets the director
 seeds for the parent directory $d$ either from the server or from the client's local cache,
 The client then derivew to keys from this key: a 32-byte HMAC key, and a 32-byte box key.
 The client can now form a \textit{dirent} with the fields: (1) the new directory ID $i$; (2)
-the parent dirent $d$; (3) the MACs of of the name of directory (the last component of the path),
+the parent dirent $d$; (3) the MACs of the name of directory (the last component of the path),
 using the MAC key derived just above; (4) the encryption of this name, using the box key
 derived just above; (5) the version number (which starts at 1); (6) the role required to
 overwite this entry; and (7) a ``binding MAC'' of the above fields, using the HMAC
-key derived for parent directory $d$. The client posts this dirent up the server, and now
+key derived for parent directory $d$. The client posts this dirent up to the server, and now
 the new directory is linked into place. Note, the client can race another client here,
 in which case there will be conflict over the triple composed of $d$, the name MAC, and 
 the version number. The client that loses the race should download the winning dirent
 and potentially try again.
 
-Note that the directory name is MAC'ed and encrypted (using authenticated-encryption) separately.
-The fields serve two different purposes: the former allows for lookups, where a client knows
-a path and want to discover which directory (or later, file) it points to; the latter allows
-for listing, where a client wants to know what is in a directory.
+Note that the directory name is MAC'ed and encrypted (using randomized
+authenticated-encryption) separately.  The fields serve two different purposes:
+the former allows for lookups, where a client knows a path and want to discover
+which directory (or file) it points to; the latter allows for listing,
+where a client wants to know what is in a directory.
 
 \subsubsection{Walking the Namespace}
 \label{sec:walk}
@@ -86,19 +87,19 @@ by the first user of the KV store for this party. The client can fetch this dire
 with a special RPC, which returns the directory ID and its boxed directory key seeds.
 To walk down to \texttt{/a}, the client MAC's the name \texttt{a} with MAC keys 
 derived from these seeds, and then queries the server for the dirent in \texttt{/}
-with the computer MAC, at the greatest version. This dirent, if found, contains a
+with the computed MAC, at the greatest version. This dirent, if found, contains a
 ```binding MAC```, which cryptographically binds the dirents fields together, as MACed
 by the directory's MAC key. The client verifies this MAC, and if it passes, then the next
 step in the path is the ``value'' field of the dirent, which contains the directory ID
 of \texttt{/a}. This process continues until the leaf is reached.
 
 To reduce latency, clients make heavy use of local caching. As they walk, they write down
-which dirents they passed through and which versinos of those dirents that they saw.
+which dirents they passed through and which versions of those dirents that they saw.
 At the end of the process, the send up the whole path to the server, asking if any dirent
 was stale. If so, the clients repeats parts of the walk to get fresh data. 
 
-Note there is a special ``value'' field for ``tombstones,'' which signify that the 
-file at the path was deleted. That value can later be reinsted if a subsequent version
+Note there is a special value field for ``tombstones,'' which signify that the 
+file at the path was deleted. That value can later be reinstated if a subsequent version
 of the dirent replaces the tombstone with a value that points to a directory or file.
 
 A dishonest server can withhold fresh dirent versions, which might mask file
@@ -121,7 +122,7 @@ Creating a small file (one less than 2KB) works much like creating a directory. 
     \item And writes the dirent pointing to the new file ID.
 \end{enumerate}
 %
-Small files are immutable. To make an edit to a small file, a client uploads a new 
+Small files are immutable. To edit a small file, a client uploads a new 
 small file and replaces the dirent to point to the new file ID.
 
 
@@ -141,22 +142,22 @@ files.
 \subsubsection{Key Rotations}
 \label{sec:kv:rotations}
 
-Given the KV stores persistent data, and new clients and members might need to
+Given the application stores persistent data, and new clients and members might need to
 access old data, there is only so much we can do to prevent data theft if a
 client device is compromised.  Consider this example: Alice is a member of team
 ``Acme'' and writes a file \texttt{/foo}.  Call her device key $d$, her PUK
 $u_0$ and the PTK $t_0$. The server has access to the sequence of encryptions,
-starting from the $d$, through $u_0$, $t_0$ and the file key $f$., that secure the contents of
+starting from the $d$, through $u_0$, $t_0$ and the file key $f$, that secure the contents of
 \texttt{/foo}. The server \textit{needs} access to these data to broker access
 to Alice's other devices, and the other members of team Acme.
 Years pass, and device $d$ is lost, and Alice revokes $d$ after
 realizing this.  Along the way, $u_0$ has rotated to $u_6$, and the latest Acme
-PTK is now $t_{100}$.  And let's say all along, the FOKS clients of ACME members
+PTK is now $t_{100}$.  And let's say all along, Acme members
 rotate the encryptions stored in the KV store to use the latest PTKs. An evil
 server who recovers device $d$ can still acceess the file \texttt{/foo}, despite
 all the well-intenioned rotations, because it kept the original encryption of
 \texttt{/foo}, encrypted with the original keys, and disobeyed commands to throw
-away the ciphertext. In other words, if the server doesn't cooperate, there is
+away ciphertexts. In other words, if the server doesn't cooperate, there is
 only so much that can be done to protect old data after a device compromise.  Of
 course, future data is safe in this scenario.
 
@@ -167,7 +168,7 @@ throws away old ciphertexts, then we still made
 security gains by rotating file system data, even if the server later
 becomes evil.
 
-The FOKS KV Store leaves the door open to later perform these
+The FOKS KV-Store leaves the door open to later perform these
 reencryptions, though so far we have not implemented it.
 Clients should periodically sweep over all keys and values,
 reencrypt them for the latest PTKs (or PUKs), and instruct
@@ -193,21 +194,23 @@ to implement deletion in future versions so users can reclaim quota.
 FOKS includes an application written atop the KV store, which implements an
 end-to-end encrypted (and authenticated) Git Server. FOKS URLs for 
 a user looks like this:
-
+%
 \begin{verbatim}
-foks://acme.host/alice/tango-proj
+                  foks://acme.host/alice/tango-proj
 \end{verbatim}
-
+%
 Where \texttt{acme.host} is the FOKS server, \texttt{alice} is the user's
 username, and \texttt{tango-proj} is the name of the repository. And
 for a team:
-
+%
+\begin{center}
 \begin{verbatim}
-foks://acme.host/t:interns/whiskey-proj
+              foks://acme.host/t:interns/whiskey-proj
 \end{verbatim}
-
+\end{center}
+%
 Where \texttt{t:interns} is the team name. Users of the system
-clone \texttt{git clone} this URL and then push and pull as
+\texttt{git clone} this URL and then push and pull as
 they would a conventional Git server. Data is written through to
 the FOKS server at \texttt{acme.host}, into its KV-store,
 of course end-to-end encrypted and authenticated so that the server
@@ -226,8 +229,7 @@ The protocol consists of Git sending commands like \texttt{capabilities},
 \texttt{list}, \texttt{push}, and \texttt{fetch}, and the helper responding
 with success/failure and data. The helper translates between
 Git's object model and whatever remote storage system it interfaces with.
-
-The more helper must deeply understand Git's object model. The 
+The helper must deeply understand git's object model. The 
 helper gives commands of the form:
 %
 \begin{verbatim}
@@ -289,9 +291,9 @@ system can be built atop the Git system, with FOKS's help. A plan might look lik
 \begin{enumerate}
 
     \item
-First off, it now
-becomes important to use SHA2 rather than SHA1 based object hashing. The latter
-is the default in git, but due to the ease with which one can find colliisions
+First off, it
+becomes important to use SHA2 rather than SHA1-based object hashing. The latter
+is the default in git, but due to the ease with which one can find collisions
 in SHA1, signing over these hashes achieves little. Up until now, SHA1 does
 not pose a security threat, since all objects and object hashes are protected
 with authenticated encryption.
@@ -310,7 +312,7 @@ with authenticated encryption.
 
 Nested team graphs can complicate this picture. If $u$ is a member of team $t_1$,
 which is in turn a member of team $t_2$, what happens when $u$ signs commits
-for $t_2$'s Git repository? Recall that readers of $t_2$ might not have access 
+for $t_2$'s git repository? Recall that readers of $t_2$ might not have access 
 to $t_1$'s roster, and therefore might not be able to read $u$'s sigchain
 or verify his PGP key. So administrators with better visibility need
 to propogate these keys to the rest of the team; and this process 
