@@ -234,7 +234,7 @@ G
 	doi          = {10.17487/RFC6234},
 	url          = {https://rfc-editor.org/rfc/rfc6234.txt},
 	author       = {Donald Eastlake 3rd and Tony Hansen},
-	title        = {{US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)}},
+	title        = {{US Secure Hash Algorithms ({SHA} and {SHA}-based {HMAC} and {HKDF})}},
 	pagetotal    = 127,
 	year         = 2011,
 	month        = may,
@@ -298,7 +298,7 @@ G
 }
 
 @misc{bip66,
-    title = {BIP 66: Strict DER signatures},
+    title = {BIP 66: Strict {DER} signatures},
     author = {Pieter Wuille},
     year = {2015},
     howpublished = {Bitcoin Improvement Proposal},
@@ -333,7 +333,7 @@ G
     author = {Google},
     year = {2008},
     howpublished = {Available at \url{https://protobuf.dev/}},
-    note = {Accessed: 2024}
+    note = {Accessed: 2025}
 }
 
 @misc{capnproto,
@@ -341,7 +341,7 @@ G
     author = {Kenton Varda},
     year = {2013},
     howpublished = {Available at \url{https://capnproto.org/}},
-    note = {Accessed: 2024}
+    note = {Accessed: 2025}
 }
 
 @misc{snowpack,
@@ -508,3 +508,85 @@ G
     note = {Internet Engineering Task Force (IETF) standard for PGP encryption}
 }
 
+
+// make a citation for matrix.org
+@misc{matrix,
+    title = {Matrix: An Open Network For Secure, Decentralised Communication},
+    author = {Matrix.org Foundation},
+    year = {2025},
+    url = {https://matrix.org},
+    note = {Accessed: 2025}
+}
+
+@misc{mastadon,
+    title = {Mastodon},
+    author = {Eugen Rochko},
+    year = {2025},
+    url = {https://docs.joinmastodon.org},
+    note = {Accessed: 2025}
+}
+
+@techreport{ietf-keytrans-architecture-03,
+    number =    {draft-ietf-keytrans-architecture-03},
+    type =      {Internet-Draft},
+    institution =   {Internet Engineering Task Force},
+    publisher = {Internet Engineering Task Force},
+    note =      {Work in Progress},
+    url =       {https://datatracker.ietf.org/doc/draft-ietf-keytrans-architecture/03/},
+    author =    {Brendan McMillion},
+    title =     {{Key Transparency Architecture}},
+    pagetotal = 23,
+    year =      2025,
+    month =     feb,
+    day =       25,
+    abstract =  {This document defines the terminology and interaction patterns involved in the deployment of Key Transparency (KT) in a general secure group messaging infrastructure, and specifies the security properties that the protocol provides. It also gives more general, non-prescriptive guidance on how to securely apply KT to a number of common applications.},
+}
+
+@misc{rfc9420,
+    series =    {Request for Comments},
+    number =    9420,
+    howpublished =  {RFC 9420},
+    publisher = {RFC Editor},
+    doi =       {10.17487/RFC9420},
+    url =       {https://www.rfc-editor.org/info/rfc9420},
+    author =    {Richard Barnes and Benjamin Beurdouche and Raphael Robert and Jon Millican and Emad Omara and Katriel Cohn-Gordon},
+    title =     {{The Messaging Layer Security (MLS) Protocol}},
+    pagetotal = 132,
+    year =      2023,
+    month =     jul,
+    abstract =  {Messaging applications are increasingly making use of end-to-end security mechanisms to ensure that messages are only accessible to the communicating endpoints, and not to any servers involved in delivering messages. Establishing keys to provide such protections is challenging for group chat settings, in which more than two clients need to agree on a key but may not be online at the same time. In this document, we specify a key establishment protocol that provides efficient asynchronous group key establishment with forward secrecy (FS) and post-compromise security (PCS) for groups in size ranging from two to thousands.},
+}
+
+@techreport{barnes-mimi-identity-arch-02,
+    number =    {draft-barnes-mimi-identity-arch-02},
+    type =      {Internet-Draft},
+    institution =   {Internet Engineering Task Force},
+    publisher = {Internet Engineering Task Force},
+    note =      {Work in Progress},
+    url =       {https://datatracker.ietf.org/doc/draft-barnes-mimi-identity-arch/02/},
+    author =    {Richard Barnes and Rohan Mahy},
+    title =     {{Identity for E2E-Secure Communications}},
+    pagetotal = 16,
+    year =      2025,
+    month =     feb,
+    day =       4,
+    abstract =  {End-to-end (E2E) security is a critical property for modern user communications systems. E2E security protects users' communications from tampering or inspection by intermediaries that are involved in delivering those communcations from one logical endpoint to another. In addition to the much-discussed E2E encryption systems, true E2E security requires an identity mechanism that prevents the communications provider from impersonating participants in a session, as a way to gain access to the session. This document describes a high-level architecture for E2E identity, identifying the critical mechanisms that need to be specified.},
+}
+
+@misc{cryptoeprint:2023/1515,
+      author = {Julia Len and Melissa Chase and Esha Ghosh and Kim Laine and Radames Cruz Moreno},
+      title = {{OPTIKS}: An Optimized Key Transparency System},
+      howpublished = {Cryptology {ePrint} Archive, Paper 2023/1515},
+      year = {2023},
+      url = {https://eprint.iacr.org/2023/1515}
+}
+
+@misc{zoom_e2e_v4,
+  title={Zoom Cryptography Whitepaper},
+  author={Josh Blum and Simon Booth and Brian Chen and Oded Gal and Maxwell Krohn and Julia Len and Karan Lyons and Antonio Marcedone and Mike Maxim and Merry Ember Mou and Armin Namavari and Jack O'Connor and Surya Rien and Miles Steele and Matthew Green and Lea Kissner and Alex Stamos},
+  year={2022},
+  month={11},
+  day={18},
+  version={4.0},
+  note = {Available at \url{https://css.csail.mit.edu/6.858/2023/readings/zoom_e2e_v4.pdf}}
+}

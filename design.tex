@@ -50,11 +50,12 @@ with the FOKS server, who eventually selectively shares it with other users.
 We detail the exact cryptography in Section~\ref{sec:cryptography}.
 
 Hardware keys that support the PIV protocol (like \yubi{} version 5 and later)
-can also be used as device keys. These devices get randomly-generated private
-keys in the factory, written to one of 20 possible ``slots.'' FOKS users select
-a slot to use, and the client sends the corresponding public key to the FOKS 
-server. Signing and decryption operations happen on the device against the chosen
-slot. 
+can also be used as device keys. These devices randomly-generate private keys
+for one of 20 possible ``retired management slots.'' They can then
+export ``attestations'' that keys are generated on-device (as opposed to generated
+elsewhere and written into the device). FOKS users select a slot to use, and the
+client sends the corresponding public key to the FOKS server. Signing and
+decryption operations happen on the device against the chosen slot. 
 
 \subsubsection{Per-User Keys (PUKS)}
 

@@ -20,7 +20,7 @@
 
 \title{The Federated Open Key Service (FOKS)}
 \author{Maxwell Krohn (max@ne43.com)}
-\date{\today\\Version 1.1}
+\date{\today\\Version 1.2}
 
 
 \begin{document}
@@ -71,10 +71,19 @@ untrusted server.  Like Keybase~\cite{keybase}, FOKS applies this basic
 architecture to the problem of key distribution, rather than the data those keys
 might secure. Many other projects have influenced FOKS's design, like
 CONIKS~\cite{melara2015coniks}, SEAMless~\cite{chase2019seemless}, 
-ELEKTRA~\cite{cryptoeprint:2024/107} and the widespread adoption of Key
+ELEKTRA~\cite{cryptoeprint:2024/107}, Zoom's E2EE system~\cite{zoom_e2e_v4}, 
+OPTIKS~\cite{cryptoeprint:2023/1515} and the widespread adoption of Key
 Transparency in Signal, WhatsApp and iMessage. The question of federation has
-largely been ignored, as these sytems all shared the basic architecture of a
-single upstream server.
+largely been ignored, as these systems all shared the basic architecture of a
+single upstream server. 
+
+Projects such as Matrix~\cite{matrix} and Mastodon~\cite{mastadon} have
+demonstrated the power of federation in other domains but focus on different
+applications, like chat and social media. Various IETF drafts are considering
+Key Transparency~\cite{ietf-keytrans-architecture-03} and identity
+extensions~\cite{barnes-mimi-identity-arch-02} to Messaging Layer Security
+(MLS)~\cite{rfc9420} but so far do not provide a complete solution for the use
+case described in this paper.
 
 \section{Conclusion}
 
