@@ -422,7 +422,7 @@ And so on. It might seem at first that there is an unnecssary layer of indirecti
 SKMWKs $r_i$'s and session keys $s_i$'s. To see why it's required, consider the case of a 
 device active around passphrase generation $p_0$, but then turned off for a long time,
 only to come back online at a much later passphrase generation, say $p_9$. At this point,
-the user has forgotten passphrae $p_0$ and is only expected to know $p_9$. When they try
+the user has forgotten passphrase $p_0$ and is only expected to know $p_9$. When they try
 to unlock secret key materials on this hitherto-mothballed device, they will enter passphrase
 $p_9$. The scheme is robust to this scenario. The device pulls $f_9$ down from the server
 and derives $\sk{p_9}$ from $p_9$. It can then decrypt $f_9$ and recover the session key $s_9$.
