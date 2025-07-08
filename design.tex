@@ -24,7 +24,7 @@ different cookies, preferences, passwords and history) for the same user.
 
 Each of the users can of course have multiple devices, like a desktop, a laptop,
 a phone, and a \yubi . Additionally, users can have ``backup devices,'' which can
-be writted down on paper and stored in a safe place. The system recommends at
+be written down on paper and stored in a safe place. The system recommends at
 least two devices to prevent data loss. That is, these devices have private keys
 that decrypt data, and the loss of the last key prevents decryption of the data.
 Obviously there is a trade-off here: the more devices, the more likely the user
@@ -68,7 +68,7 @@ encrypts the old PUK secret keys for the new PUK secret key. This way,
 a device that has access to the latest PUK can get access easily to all prior
 PUKs.
 
-Once the PUK sequence is estblished, the system has a convenient way to encrypt
+Once the PUK sequence is established, the system has a convenient way to encrypt
 a data for all of the user's devices --- it simply encrypts the data for the 
 user's latest PUK.
 
@@ -108,11 +108,11 @@ $j$ if $\role{k} \le \role{j}$.
 
 The idea here is that the owners of a group get to see all the keys; the admins
 can see the admin and reader keys; and the readers can see keys at or below
-their visiblility level. This configuration allows groups to have
+their visibility level. This configuration allows groups to have
 lower-privileged members, and for users to have lower-privileged devices. In
 Keybase, a similar but less-flexible property allows ``bots'' into teams, so that
 all the members of the teams can interact with the bots, but the members had
-communications that the bots aren't privvy to.  For now, all user
+communications that the bots aren't privy to.  For now, all user
 devices are at the \owner{} role, but we plan to relax this requirement in the
 future.
 
@@ -141,7 +141,7 @@ author intended and wasn't tampered with, even if the set of signers varies over
 time. Of course, signers do vary over time as users add and remove devices, or
 as they add and remove members from teams.
 
-Each user (and team) gets its own sigchain. The sigchain keeps an indellable record
+Each user (and team) gets its own sigchain. The sigchain keeps an indelible record
 of which keys can update the chain, and which PUKs or PTKs are currently
 active for the user (or team).
 
@@ -174,7 +174,7 @@ several PUKs can be introduced at once due to the different possible device
 roles). The client uploads the whole package as the user's eldest link.
 
 Subsequent links proceed in largely the same way, with a few minor differences.
-The previous hash (\ref{item:prev}) is the collision-resistent hash of the 
+The previous hash (\ref{item:prev}) is the collision-resistant hash of the 
 package uploaded in the previous step. In some cases, like device addition,
 new PUK public keys (\ref{item:puk}) do not appear. In these cases,
 no signatures with PUKs are required.
@@ -189,7 +189,7 @@ same check. This simple mechanism ensures the server can't introduce a bogus
 device.
 
 \paragraph{Teams} A team chain link contains the following fields, many of which
-are analagous to user chains:
+are analogous to user chains:
 
 \begin{enumerate}[label=T.\arabic*]\itemsep0em
     \item The hash of the previous link in the chain (nil for the eldest)
@@ -220,7 +220,7 @@ with source role of \owner, then only users $a$ and $b$ will have access. If
 $T$ creates the new team with source role of \reader, then all users will have
 access. 
 
-FOKS clients and servers enforce these access controls with the key hierachy.
+FOKS clients and servers enforce these access controls with the key hierarchy.
 In the case of the owners of $T$ creating $U$, $T$'s \owner{} PTK appears in
 field~\ref{item:team-actor} and performs the signature over the chainlink. 
 As $T$ creates $U$, it makes new PTKs for $U$. It encrypts the secret keys
@@ -341,15 +341,15 @@ they need to wait for updates).
 Since many users and teams might be active on a single FOKS server, 
 the user has no reason to download every root Merkle epoch. Rather,
 the user will experience long gaps between epochs, especially if going
-periodically offline. Whenenver a client downloads a root block,
+periodically offline. Whenever a client downloads a root block,
 say at epoch $i$, it writes it to local storage. When the client later
 downloads another root block, call it $k$, the client enforces
-that $i < k$. It also sends up the paremeter $i$, and the server
+that $i < k$. It also sends up the parameter $i$, and the server
 replies with intermediate blocks $j_1, j_2 \dots j_n$, such that
 $i < j_1 < \cdots j_n < k$,  where block $j_{a}$ contains
 a pointer to $j_{a-1}$, block $j_1$ contains a pointer to $i$
 and block $k$ contains a pointer to $j_n$. The spacing of the
-previous pointers in the root block ensures than $n$ is appromixately
+previous pointers in the root block ensures than $n$ is approximately
 $\log (k-i)$. Chaining root blocks in this way 
 encourages the server to maintain a consistent, coherent append-only
 tree. Clients should perform periodic audits of all root blocks
@@ -381,7 +381,7 @@ also returns the sequence $(r_2, r_3, \dots r_{n+1})$, so the client can verify
 they match the commitments in the sigchain.  Note the first link location is not
 randomized with $r_1$, since there was no $0$th link to commit to $r_1$.
 However, the eldest link's placement is already essentially random since the
-party's ID $p$ is generately randomly at the first link (and is predictable
+party's ID $p$ is generated randomly at the first link (and is predictable
 thereafter).
 
 
@@ -453,9 +453,9 @@ and removals, and how the client maintains this subchain.
 \label{sec:naming}
 
 The server stores user and team chains at tree locations indexed by user IDs
-and team IDs respectively. These IDs are large random identitiers, and are not
+and team IDs respectively. These IDs are large random identifiers, and are not
 friendly to humans. Users of course need to be able to refer to these parties
-with convenient names. Morever, parties should have the ability to change
+with convenient names. Moreover, parties should have the ability to change
 names from time-to-time, though not too frequently, as too much churn in naming would
 complicate the user experience. 
 
@@ -472,7 +472,7 @@ that the name matches the commitment in $u$'s sigchain.
 
 This system ensures a 1-to-1 mapping between a name $n$ and a
 user ID $u$. $u$ can later switch to a new name $n'$ by adding
-another sigchain link commiting to $n'$ that overrides the earlier
+another sigchain link committing to $n'$ that overrides the earlier
 commitment to $n$. The server can likewise later reassign $n$
 (though we currently do not allow this) by posting a new user ID
 $u'$ at tree location $H(n, 2, \textsf{name}, nil)$.
@@ -532,7 +532,7 @@ The first message, ``start'', is optional and only needed in the case that $s_2$
 is entered on device $d_1$. In the ``hello'' message, the provisionee sends its
 new key and desired device name over to the provisioner. The provisioner then
 makes a sigchain link, $l$, and in the ``please sign'' message, asks the
-provisionee to sign it with $k_2$, the new device key. The provisoner also
+provisionee to sign it with $k_2$, the new device key. The provisioner also
 includes token $t$ so the provisionee can load the user's sigchain from the
 server. In the ``please counter-sign'' message, the provisionee returns the
 signed link and asks the provisioner sign it a second time with $k_1$, $d_1$'s
@@ -557,7 +557,7 @@ concerned the PAKEs can be easily DOSed. That is, the provisionee $d_2$ is not
 authenticated to the server since the user hasn't logged in on $d_2$ yet; this
 login happens naturally as a result of the provisioning process. Thus, there is
 nothing to stop an attacker from targeting a user and entering bad PAKE codes
-before the legimiate user can enter the correct code. Such an attack would not
+before the legitimate user can enter the correct code. Such an attack would not
 break the integrity of the protocol, but could prevent the user from ever
 successfully provisioning.
 
@@ -574,7 +574,7 @@ across all device pairs.
 Most of the protocol in Section~\ref{sec:kex} can be skipped in the case
 of either provisioning a regular device (a computer or a phone) with a \yubi ,
 or vice versa. No communication needs to bounce off the server, as the device
-and the \yubi{} can comunicate directly via the local machine. The crux of 
+and the \yubi{} can communicate directly via the local machine. The crux of 
 the protocol, however, remains. For a \yubi{} provisioning a new device,
 the device makes the new link, the device signs the link, and the \yubi{} 
 countersigns it. Then the device posts the link (and encrypted PUK keys)
@@ -598,7 +598,7 @@ can join the team from across the internet.
 
 Because readers can be local or remote, important team protocols, like addition
 and removal, must work with more generality, as we cannot assume that the reader
-and the team have the same home server. Morever, we cannot assume much
+and the team have the same home server. Moreover, we cannot assume much
 cooperation among independently administered servers under our thread model
 (see Section~\ref{sec:threatmodel}).
 
@@ -816,7 +816,7 @@ opens the certificate. From here, it checks the signatures described just above.
 Note that at this point, $p$ is not a member of the team, so cannot read the
 team's sigchain. 
 
-There is therefore an oppoortunity for the team certificate to be partially
+There is therefore an opportunity for the team certificate to be partially
 forged. $p$ can check that that first PTK corresponds to the team ID, so
 therefore knows that whoever generated this certificate was at one time a team
 admin.  But that administrator might have been removed from the team. Also, the
@@ -843,10 +843,10 @@ saying it accepted an invitation to team $t$.
 
 \item $p$ is a user, and $p$ and $t$ are on different servers.
 %
-User $p$ contacts its home server and asks that it assue a new 
-``remote view permission token'' for the administratos and owners of $t$.
+User $p$ contacts its home server and asks that it issue a new 
+``remote view permission token'' for the administrators and owners of $t$.
 The server sends back this token. $p$ encrypts this token with the PTK
-it received in the team's certifcate, and then posts this encryption to
+it received in the team's certificate, and then posts this encryption to
 $t$'s home server. Note that $p$ isn't trusting the server's administrators 
 here, so does not send this token in plaintext. As with the above case,
 $p$ writes a link to its Team Membership Chain saying it accepted an invitation
@@ -889,7 +889,7 @@ $t$'s latest PTK for that PUK or PTK.
 
 Once the party is admitted into the team, it can sign a statement with its PTK
 or PUK to play the team's sigchain. When it does that for the first time, it
-updates its Team Memership Chain to show that the accepted invite transitioned
+updates its Team Membership Chain to show that the accepted invite transitioned
 to an official admittance. 
 
 \subsubsection{Team Key Rotations}
@@ -897,9 +897,9 @@ to an official admittance.
 
 PTKs must be rotated in two important cases: (1) when a party is removed from a team; and (2)
 when a member rotates their PTK or PUK. The first case is straightforward, and happens
-when the administrator performs the removal. In such a case, the adminstrator (or owner)
+when the administrator performs the removal. In such a case, the administrator (or owner)
 posts a new link to the team's sigchain with the role of \none{} for the affected party.
-The link also contains the new PTKs for the team. The administator also includes
+The link also contains the new PTKs for the team. The administrator also includes
 new encryption of these PTKs for the remaining members of the team.
 
 The trickier case is the second, since the rotations happen asynchronously. Say
@@ -921,7 +921,7 @@ team encountered where the user can act as an administrator, either directly or
 via a team, it checks that all PTKs and PUKs in the team chain are up-to-date.
 If it finds one that is behind for any member, it will rotate necessary PTKs so
 they are encrypted for the member's latest keys. Rekeying starts with teams
-that have the lowest index ranges, and moves upwards, so that cascaing rekeys
+that have the lowest index ranges, and moves upwards, so that cascading rekeys
 happen in the right order.
 
 If there are multiple administrators or owners for teams, there is no explicit
@@ -934,14 +934,14 @@ server), will reload the team, and then see it no longer needs to rekey.
 Note the importance of the Team Membership Chains in this protocol. The
 users should not trust the servers to faithfully recount to them which
 teams they are members of; if they did, dishonest servers could silently
-supress team rotation through omission. Instead, the Merkle Tree and sigchain
+suppress team rotation through omission. Instead, the Merkle Tree and sigchain
 append-only properties give users guarantees that servers aren't tampering
 with their view of team memberships.
 
 Also note that to perform this ongoing key rotation process, all team
 administrators need ongoing access to the sigchain of team's members. Thus, the
 access tokens and permissions exchanged as part of the team invitation process
-(see Section~\ref{sec:invitation}) persist in the team as long as mebmers
+(see Section~\ref{sec:invitation}) persist in the team as long as members
 remain.
 
 \subsubsection{Removal Keys}
@@ -964,7 +964,7 @@ $p$ is a user or a team). The administrator puts both ciphertexts to the server,
 and writes a commitment to this key into the sigchain link. When $p$ loads the 
 team and plays the sigchain, it writes down this commitment to a local database.
 
-Later, when an administator removes $p$ from the team, $p$ will fail to load
+Later, when an administrator removes $p$ from the team, $p$ will fail to load
 new chainlinks from the team, though it should still keep existing chainlinks
 in its cache. It can now demand ``proof'' from the server that its removal
 was legitimate. If indeed it was, the server will send down the ciphertext
@@ -985,7 +985,7 @@ and make a false statement that $p$ has been removed from the team. Though it is
 possible to replace and rotate team removal keys when member PTKs or PUKs change,
 such rotations create new challenges. If members fall behind the latest
 team removal keys and then are removed, they will have no commitment to 
-compare the new removal key against, preventing the protocol from workking.
+compare the new removal key against, preventing the protocol from working.
 We believe the correct trade-off is to keep the original team removal key
 despite other rotations.
 
@@ -1095,10 +1095,10 @@ Previous systems like Keybase~\cite{keybase} espoused a notion of transparency
 regarding a user's identity and devices. Any user $u$ is free to load the 
 sigchain of any other user $v$ on the system, and can learn how many devices $v$
 has, when those devices were added to $v$'s sigchain, and the names of these
-devices. Howver, team membership was private, so $u$ could only load team $t$'s
+devices. However, team membership was private, so $u$ could only load team $t$'s
 sigchain, or learn team $t$'s name, if $u$ is on team $t$.  Zoom's
 system~\cite{zoom-privacy} is derived from Keybase's, but because it caters to
-enterprise settings, it opts for more privacy, obscuring most deatils about user's
+enterprise settings, it opts for more privacy, obscuring most details about user's
 identities.
 
 As described above, FOKS takes by default the more privacy-respecting

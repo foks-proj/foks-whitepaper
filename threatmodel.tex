@@ -16,7 +16,7 @@ offer any guarantees.
 Users might sometimes lose their devices. In an ideal world, hardware protections
 would prevent whoever recovered the device from accessing the device's private
 key material. In the case of hardware keys (like YubiKeys), or backup-keys
-written on paper, the user has less protection during comrpomise. Regardless,
+written on paper, the user has less protection during compromise. Regardless,
 once the user revokes the lost device, keys should rotate so that data is secure
 going forward (this property is known post-compromise security). In some cases,
 past data might be safe from the attacker (this property is known as forward-secrecy),
@@ -30,16 +30,16 @@ data. If a new user joins an existing group, or if a user adds a new device,
 they should be able to access old data, which might be required to reassemble the
 shared resource. For instance, when Alice adds Bob to a git project, Bob
 should see all past commits in the commit history, otherwise the
-application will break. Thus, we can't guarantee foward-secrecy, since
+application will break. Thus, we can't guarantee forward-secrecy, since
 lack of forward secrecy is needed for the application to function properly.
 
 In FOKS, clients pick their servers. They might select for servers
 that are generally aligned with. They can run their own servers, or pick 
 from third party hosting providers. Users should assume that servers
-are generally trustworthy, but might suffer comrpomises from time to time.
+are generally trustworthy, but might suffer compromises from time to time.
 For instance, servers might be running on cloud infrastructure, and the underlying
 storage, network, or computation might be compromised. Insiders or state actors
-might have privileged access to the underlying infrascture. 
+might have privileged access to the underlying infrastructure. 
 
 If servers behave honestly, the FOKS system works securely as expected.  If
 servers behave maliciously, they can deny access to data through a variety of
@@ -53,7 +53,7 @@ When servers are behaving honestly, they can provide clients with
 forward-secrecy. That is, if honest servers throw away data encrypted with old
 keys, attackers with access to private keys cannot cannot recover past data.  If
 we assume on the other hand that an attacker who steals a private key operates
-in cohoots with the server, then we cannot offer any guarantees about forward
+in cahoots with the server, then we cannot offer any guarantees about forward
 secrecy.
 
 Servers do not trust each other. If one server becomes corrupted, it has no

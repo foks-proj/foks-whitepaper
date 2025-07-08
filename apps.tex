@@ -16,21 +16,21 @@ available for the FOKS group. In this way, one can simultaneously achieve
 Signal-style forward secrecy and FOKS-style team and device management. 
 
 For our first FOKS prototypes, we have focused instead of two important applications:
-first, at the foundational level, a simple key-value store. Members of the team
+first, at the lower level, a simple key-value store. Members of the team
 can put and get key-value pairs to the FOKS server. Keys and values are encrypted
-with authenticated encryption agains the team's PTKs. A second application, built
-atop the first, is an end-to-end encrypted Git server, that is compatiable with
+with authenticated encryption against the team's PTKs. A second application, built
+atop the first, is an end-to-end encrypted Git server, that is compatible with
 legacy Git clients. We describe them both below.
 
 \subsection{The FOKS Key-Value Store}
 
 The FOKS Key-value (KV) store is an end-to-end encrypted key-value store, with 
-a hierchical namespace, local to each party on the system. One can store a value
+a hierarchical namespace, local to each party on the system. One can store a value
 to any key of the form `/a/b/c'; the value can be a few bytes long, or many gigabytes.
 The system provides simple \textit{put} and \textit{get} operations, but also
 operations on the namespace, like listing, moving, and deletion of directories. That is,
 one can perform an operation like \texttt{mv /a/b /foo} in roughly O(1) time, without
-individually mofidying each of the entries stored under \texttt{/a/b}. Symlinks are also 
+individually modifying each of the entries stored under \texttt{/a/b}. Symlinks are also 
 allowed. Though the system has some important Unix-style file system behaviors,
 it does not implement full POSIX~\cite{posix-2017} semantics.
 
@@ -59,12 +59,12 @@ modify the parent ``directory entry'' or \textit{dirent} to point to this new di
 See Section~\ref{sec:walk} for more details on the walking process, but for now, assume
 we have found the appropriate parent directory $d$. The client gets the directory key
 seeds for the parent directory $d$ either from the server or from the client's local cache,
-The client then derivew to keys from this key: a 32-byte HMAC key, and a 32-byte box key.
+The client then derive to keys from this key: a 32-byte HMAC key, and a 32-byte box key.
 The client can now form a \textit{dirent} with the fields: (1) the new directory ID $i$; (2)
 the parent dirent $d$; (3) the MACs of the name of directory (the last component of the path),
 using the MAC key derived just above; (4) the encryption of this name, using the box key
 derived just above; (5) the version number (which starts at 1); (6) the role required to
-overwite this entry; and (7) a ``binding MAC'' of the above fields, using the HMAC
+overwrite this entry; and (7) a ``binding MAC'' of the above fields, using the HMAC
 key derived for parent directory $d$. The client posts this dirent up to the server, and now
 the new directory is linked into place. Note, the client can race another client here,
 in which case there will be conflict over the triple composed of $d$, the name MAC, and 
@@ -154,8 +154,8 @@ Years pass, and device $d$ is lost, and Alice revokes $d$ after
 realizing this.  Along the way, $u_0$ has rotated to $u_6$, and the latest Acme
 PTK is now $t_{100}$.  And let's say all along, Acme members
 rotate the encryptions stored in the KV store to use the latest PTKs. An evil
-server who recovers device $d$ can still acceess the file \texttt{/foo}, despite
-all the well-intenioned rotations, because it kept the original encryption of
+server who recovers device $d$ can still access the file \texttt{/foo}, despite
+all the well-intentioned rotations, because it kept the original encryption of
 \texttt{/foo}, encrypted with the original keys, and disobeyed commands to throw
 away ciphertexts. In other words, if the server doesn't cooperate, there is
 only so much that can be done to protect old data after a device compromise.  Of
@@ -236,7 +236,7 @@ helper gives commands of the form:
     push refs/heads/main:refs/heads/main
 \end{verbatim}
 %
-The helper starts at the commit refered to by \texttt{refs/heads/main},
+The helper starts at the commit referred to by \texttt{refs/heads/main},
 then walks the commit tree backwards until it finds objects that the
 server already has. Then it must push the missing objects up to the server,
 then remap the references to point to the HEAD commit.
@@ -266,7 +266,7 @@ When a client fetches a new HEAD from the server, the algorithm is roughly:
 \begin{enumerate}[itemsep=2pt,parsep=0pt]
     \item Fetch all packfile indices from the server
     \item Fetch the HEAD object from the KV store
-    \item Travese the commit graph starting from the HEAD object:
+    \item Traverse the commit graph starting from the HEAD object:
     \begin{enumerate}[itemsep=2pt,parsep=0pt]
         \item If the next object is in the packfile index, fetch
              the packfile from the KV store.
@@ -315,5 +315,5 @@ which is in turn a member of team $t_2$, what happens when $u$ signs commits
 for $t_2$'s git repository? Recall that readers of $t_2$ might not have access 
 to $t_1$'s roster, and therefore might not be able to read $u$'s sigchain
 or verify his PGP key. So administrators with better visibility need
-to propogate these keys to the rest of the team; and this process 
+to propagate these keys to the rest of the team; and this process 
 might be recursive.

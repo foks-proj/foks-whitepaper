@@ -4,7 +4,7 @@
 
 Here we describe the important cryptographic decisions at play in the FOKS
 system.  For the most part, our bias is toward simplicity and boring,
-failure-proof cryptography.  For instance, as decribed in
+failure-proof cryptography.  For instance, as described in
 Section~\ref{sec:merkle}, we use a vanilla collision-resistant hash function to
 hide tree locations, rather than the slightly more exotic pseudo-random function
 approach. The emphasis throughout is on tried-and-true cryptography that will
@@ -88,12 +88,12 @@ cryptographic operations for the structure:
   \item \texttt{PrefixedHash}(\textit{obj}): The object's UTID is big-endian encoded, then
   prepended to the object's binary Msgpack encoding. The hash of the combined message is returned.
 
-  \item \texttt{Hmac}(\textit{obj}, \textit{key}): As above, a mesasge is formed out of the object's UTID
+  \item \texttt{Hmac}(\textit{obj}, \textit{key}): As above, a message is formed out of the object's UTID
   concatenated with the encoding of the object itself. The combined message is the message input
   to the MAC function, and the key is passed through as the key.
 
   \item \texttt{SealIntoSecretBox}(\textit{obj}, \textit{nonce}, \textit{key}): The object's UTID is
-  encoded and conctacted with the supplied \textit{nonce}. The new value is then used as the nonce
+  encoded and concatenated with the supplied \textit{nonce}. The new value is then used as the nonce
   passed into the encryption algorithm, along with the encoding of \textit{obj} and the supplied \textit{key}.
 
   \item \texttt{Sign}(\textit{obj}, \textit{key}): The object's UTID is prepended to an encoding
@@ -109,21 +109,21 @@ are also provided; they similarly supply UTIDs where necessary to ensure that ve
 succeed.
 
 The programmer must supply their own tooling to generate these UTIDs. Simple CLI tools or 
-editor plugins suffice. However, FOKS provides two mechanisms to guararntee they remain unique
+editor plugins suffice. However, FOKS provides two mechanisms to guarantee they remain unique
 across the project. At compile-time, a simple tool examines all input files to guarantee that
-no UTID contant appears twice. And at runtime, the compiler provides a list of all UTID constants
+no UTID constant appears twice. And at runtime, the compiler provides a list of all UTID constants
 compiled from the protocol input files. The program fails an assertion if it sees any repeats.
 
 \subsubsection{Variants}
 
 We have seen Snowpack structures in Section~\ref{sec:snowpack-structures}. Another important
-data type is the \textit{variant}, also known as a descriminated union. Figure~\ref{fig:link-inner}
+data type is the \textit{variant}, also known as a discriminated union. Figure~\ref{fig:link-inner}
 shows an example from FOKS. The enumerated type \texttt{LinkType} has two possible values:
 \texttt{GroupChange} for main chains, and \texttt{Generic} for subchains like team membership chains
 and user settings chains. Based on the switch value, the enumerated type takes the form of 
 a \texttt{GroupChange} or \texttt{GenericLink} object. Variants have many of the same restrictions
 as structures: fields specified with `@i'-style slots should never be repurposed, though they 
-can be dropped; also, new type possibilites can be added without breaking the protocol.
+can be dropped; also, new type possibilities can be added without breaking the protocol.
 
 \begin{figure}[ht]
   \centering
@@ -228,12 +228,12 @@ variant KeyDerivation switch (t: KeyDerivationType) @0xd35cdcc95caef674 {
   \label{fig:key-derivation}
 \end{figure}
 
-For example, to make a new PTK, the team adminstrator picks a random 32-byte
+For example, to make a new PTK, the team administrator picks a random 32-byte
 seed value.  Whenever the PTK is used in a symmetric context (like for
 encrypting older PTKs), the key derivation uses \texttt{KeyDerivationType =
 SecretBoxKey} as an HMAC input.  Similarly for using the PTK as a signing key.
 All derived keys are also 32-bytes with the exception of the ML-KEM key, which
-needs 64-bytes. The two halfs of this derived key are generated with the same
+needs 64-bytes. The two halves of this derived key are generated with the same
 mechanism, but using \texttt{MLKEM=0} and \texttt{MLKEM=1} in the
 \texttt{KeyDervitation} object as the HMAC input.
 
@@ -241,7 +241,7 @@ mechanism, but using \texttt{MLKEM=0} and \texttt{MLKEM=1} in the
 
 FOKS supports hardware keys like \yubi{} that support the Personal Identity
 Verification~\cite{nist-sp-800-73-5} (PIV) standard.  This standard allows the
-device to perform public key cryptopgrahic operations, like ECDSA and
+device to perform public key cryptographic operations, like ECDSA and
 Diffie-Hellman over the p256 elliptic curve~\cite{nist-fips-186-3}. Though we
 have chosen the Ed25519 and Curve25519 curves for use everywhere, we now need to
 accommodate another curve to fit the PIV standard. Too much ``agility'' has
@@ -289,7 +289,7 @@ There are few competing applications using these features and key slots.
 \label{sec:hesp}
 
 For backup device keys (which FOKS users can write on pieces of paper), and 
-exchanging provisioning secrets betwewen two computers, FOKS uses a simple
+exchanging provisioning secrets between two computers, FOKS uses a simple
 encoding scheme called the ``high-entropy secret phrase''. The pattern is 
 a series of random words, each separated by a random number. All
 words are chose from the BIP39 wordlist~\cite{bip39}. The exact
@@ -326,7 +326,7 @@ if possible, stores that 32-byte key in the user's OS keyring.
 
 \subsubsection{Passphrase-based Management}
 
-Though it's not encouragd, FOKS does offer a passphrased-based protection mechanism
+Though it's not encouraged, FOKS does offer a passphrase-based protection mechanism
 for secret key seeds. As above, each secret seed gets its own secret-key wrapping 
 material wrapping key (SKMWK). But instead of storing the SKMWKs in the OS keystore,
 they are encrypted with a key derived from the user's passphrase. We have important 
@@ -337,7 +337,7 @@ design considerations for this system that make it quite complex:
 \item If the user has two computers, $A$ and $B$, and the user changes his passphrase on A, when B comes online
  with the old passphrase, it has to decrypt with the new passphrase.
 
-\item Keys encryped for old passphrases need to eventually be migrated to the new passphrase, so that if
+\item Keys encrypted for old passphrases need to eventually be migrated to the new passphrase, so that if
 an attacker gets the old passphrase and all server data, they still can't decrypt the key.  Of course
 this is only possible if that computer $B$ comes back online after the change, but assuming that
 the property should hold.
@@ -418,7 +418,7 @@ f_2 &= \dhbox{s_2}{\pk{p_1}}{\sk{t_2}}, \pk{t_2} \\
 g_2 &= \secretBox{[s_2,\pk{p_1}]}{u_1} \\
 \end{align*}
 %
-And so on. It might seem at first that there is an unnecssary layer of indirection with using
+And so on. It might seem at first that there is an unnecessary layer of indirection with using
 SKMWKs $r_i$'s and session keys $s_i$'s. To see why it's required, consider the case of a 
 device active around passphrase generation $p_0$, but then turned off for a long time,
 only to come back online at a much later passphrase generation, say $p_9$. At this point,

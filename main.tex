@@ -42,10 +42,10 @@ parties have several devices. They might rotate devices, form mutable teams with
 other users, or even teams of teams in an arbitrary graph. They need to share
 secret key material to facilitate symmetric encryption, and this material must
 rotate whenever devices are replaced, or team membership changes.  This is a
-very natural problem but one that still lacks an adequate solution.  Morever, we
+very natural problem but one that still lacks an adequate solution.  Moreover, we
 believe key management should not lock users into a particular, walled provider,
 but instead, should allow for federation and independent management of server
-resouces, as we see in HTTP and SMTP.  We describe the system architecture,
+resources, as we see in HTTP and SMTP.  We describe the system architecture,
 security model, and implementation details of a system that achieves secure,
 federated key exchange, and enables useful applications like end-to-end
 encrypted data sharing and git hosting.
@@ -70,7 +70,7 @@ originated the idea of a fork-consistent blockchain of edits facilitated by a
 untrusted server.  Like Keybase~\cite{keybase}, FOKS applies this basic
 architecture to the problem of key distribution, rather than the data those keys
 might secure. Many other projects have influenced FOKS's design, like
-CONIKS~\cite{melara2015coniks}, SEAMless~\cite{chase2019seemless}, 
+CONIKS~\cite{melara2015coniks}, SEEMless~\cite{chase2019seemless}, 
 ELEKTRA~\cite{cryptoeprint:2024/107}, Zoom's E2EE system~\cite{zoom_e2e_v4}, 
 OPTIKS~\cite{cryptoeprint:2023/1515} and the widespread adoption of Key
 Transparency in Signal, WhatsApp and iMessage. The question of federation has
@@ -89,8 +89,8 @@ case described in this paper.
 
 We have described, at a high level, the Federated Open Key Service (FOKS).
 FOKS features multi-device support for users, arbitrary acyclic team graphs,
-PQ-encryption, and federation. With these primtives, we can build applications
-like end-to-end authenicated, encrypted key-value stores, and git hosting.
+PQ-encryption, and federation. With these primitives, we can build applications
+like end-to-end authenticated, encrypted key-value stores, and git hosting.
 This service is currently operational~\cite{foks-app} and all 
 source code is available on GitHub~\cite{foks-github}.
 % Conclusion goes here
