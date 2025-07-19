@@ -269,7 +269,7 @@ Remote members cannot be admins or owners, but can be readers. This configuratio
 for convenient data sharing across federation boundaries but simplifies team management
 relative to an alternative system where remote members can be owners or admins.
 
-Parties making changes to team sign new team chain links much the same way as user devices
+Parties making changes to teams sign new team chain links much the same way as user devices
 sign user chain links. First, all new PTKs sign the chain link, and then the acting
 party's latest PUK or PTK signs the chain link. This PUK or PTK must be the exact key
 advertised earlier in the chain in the case of link 2 and above. The eldest link
@@ -372,7 +372,7 @@ in the tree. This unpredictability prevents data leaks that would
 otherwise allow the owners of neighboring nodes in the tree to deduce when $p$'s
 chain advances. 
 
-When a client requests a sighchain for party $p$, the server returns $(n+1)$
+When a client requests a sigchain for party $p$, the server returns $(n+1)$
 paths down from the root of the tree, if the sigchain is $n$ links long. The
 first $n$ paths point to chain links 1 through $n$ as described above, and the
 last is a proof that the $(n+1)$ link does not exist. For each path, the server
