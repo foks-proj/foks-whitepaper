@@ -372,7 +372,7 @@ in the tree. This unpredictability prevents data leaks that would
 otherwise allow the owners of neighboring nodes in the tree to deduce when $p$'s
 chain advances. 
 
-When a client requests a sighchain for party $p$, the server returns $(n+1)$
+When a client requests a sigchain for party $p$, the server returns $(n+1)$
 paths down from the root of the tree, if the sigchain is $n$ links long. The
 first $n$ paths point to chain links 1 through $n$ as described above, and the
 last is a proof that the $(n+1)$ link does not exist. For each path, the server
@@ -824,7 +824,7 @@ name of the team cannot be checked against the Merkle Tree, so the team's name
 might be forged. Eventually, once $p$ is admitted into the team, it can check
 that these fields are correct, and leave the team if not.  By accepting the
 invitation, be it malicious or otherwise, $p$ is primarily giving access to
-reading its sighcain. It must decide whether or not this is a good idea on the
+  reading its sigchain. It must decide whether or not this is a good idea on the
 basis of who sent the team invitation in the first place. This problem can
 recursively be solved in FOKS, perhaps by a different team, or by trusted
 channel on a different platform, like a secure team chat.
