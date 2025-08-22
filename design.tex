@@ -393,7 +393,7 @@ and TLS keys. Like team and user chains, hostchains form a cryptographic chain, 
 they can only be replayed in the intended order, even if modified in transit. Chain links
 have sequence numbers and contain the cryptographic hashes of previous links. When an
 administrator creates a new server, they first create a \textit{hostkey}, a signing key-pair.
-This public key becomes the host's ID. The first chainlin contains this hostkey and several
+This public key becomes the host's ID. The first chainlink contains this hostkey and several
 subkeys, one that serves as a TLS CA for the server, and one used to sign \textit{zonefiles}
 for the server. The \textit{zonefile} contains the DNS names for the server's various services.
 Subsequent chainlinks can change any of these keys
