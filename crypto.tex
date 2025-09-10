@@ -158,7 +158,7 @@ other authenticated data. We throughout refer to encrypting with Salsa20 as
 
 For signing, we use EdDSA with the Ed25519 curve~\cite{eddsa}.  Public-key
 encryption is a hybrid of Diffie-Hellman over
-Curve25519~\cite{cryptoeprint:2011:141} and MLKEM~\cite{nist-fips-203} using a
+Curve25519~\cite{bernstein2006curve25519}, and MLKEM~\cite{nist-fips-203} using a
 construction similar to X-Wing~\cite{xwing}, but with a different binary
 encoding format and constants. Thus, in practice, all device keys, PUKs,
 PTKs, and so on are not a single keypair, but rather a triple: an EdDSA 

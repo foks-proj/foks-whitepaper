@@ -599,7 +599,7 @@ can join the team from across the internet.
 Because readers can be local or remote, important team protocols, like addition
 and removal, must work with more generality, as we cannot assume that the reader
 and the team have the same home server. Moreover, we cannot assume much
-cooperation among independently administered servers under our thread model
+cooperation among independently administered servers under our threat model
 (see Section~\ref{sec:threatmodel}).
 
 \subsubsection{Cycle Avoidance}
@@ -607,8 +607,8 @@ cooperation among independently administered servers under our thread model
 
 One problem in particular the presents itself immediately: cycles.
 Imagine a simple case, with three hosts $h_1$, $h_2$ and $h_3$, and three teams
-on those hosts, respectively, $t_1$, $t_2$ and $t_3$. If $t_1$ adds $t_2$ as a
-reader, $t_2$ adds $t_3$ as a reader, and $t_3$ adds $t_1$ as a reader, there is
+on those hosts, respectively, $t_1$, $t_2$ and $t_3$. If $t_2$ adds $t_1$ as a
+reader, $t_3$ adds $t_2$ as a reader, and $t_1$ adds $t_3$ as a reader, there is
 now a cycle in the team membership graph. That cycles are bad is not immediately
 obvious, but we must consider what happens in a rekey scenario.
 
@@ -641,15 +641,15 @@ A link from $k$ to $j$ means that knowing $k$ gives one access to $j$, i.e., tha
 
 
 Everything up until now is working as planned, but consider what happens when
-$u$ removes $v$ from $t_1$. What should happen is that all 3 teams should 
-rotate so that $v$ loses access to their most recent reader PTKs. But in practice, this
+$u$ removes $v$ from $t_1$. What should happen is that all three teams should 
+rotate so that $v$ loses access to the most recent reader PTKs. But in practice, this
 objective cannot be achieved. Playing out the scenario, $u$ rotates $t_1$'s reader PTK
-from $k_1$ to $k_1'$. It encrypts $k_1'$ for $k_1$ so that the remaining 
-members can still access old data. It also encrypts $k_1'$ for $t_2$'s most recent reader
-PTK, which remains $k_2$. See Figure~\ref{fig:cycle2} for what this new configuration looks like.
+from $k_1$ to $k_1'$. It encrypts $k_1$ with $k_1'$ so that the remaining 
+members can still access old data. It also encrypts $k_1'$ for $t_3$'s most recent reader
+PTK, which remains $k_3$. See Figure~\ref{fig:cycle2} for what this new configuration looks like.
 One thing to notice immediately is that any node on the graph is reachable from any other. That is,
 if user $v$ knows $k_1$ (which he had access to before $u$ removed him), then he can still
-decrypt any other key on the graph, including $k_1'$, which he reach via
+decrypt any other key on the graph, including $k_1'$, which he reaches via
 $k_1 \rightarrow k_2 \rightarrow k_3 \rightarrow k_1'$. So in a deep sense, the 
 rotation has failed. 
 
@@ -743,7 +743,7 @@ way for any of the hosts involved to detect it.
 
 The most blunt and naive solution is for each team to get an ``index'', which
 is simply a natural number. This index cannot change once assigned, and
-$t_1$ can only add $t_2$ iff $t_2$'s index is less than $t_1$'s. This simple
+$t_2$ can add $t_1$ if $t_1$'s index is less than $t_2$'s. This simple
 rule prevents cycles, but is inflexible and doesn't allow much play in the team
 graph as the system evolves. FOKS opts for a slightly more flexible solution of
 a similar flavor. Each team gets a ``range'' of possible index values,
@@ -751,10 +751,10 @@ representing bounds on where the team's index will eventually settle.  This
 range in practice is an interval on the positive rational numbers, of the form
 $[a,b)$, where $a,b \in \mathbb{Q^{+}}$. $b$ can take on the special value $\infty$.
 A team can always restrict its range but can never expand it. The rule for
-addition then becomes that $t_1$ can add $t_2$ iff the lower bound of $t_1$'s
-range is greater than the upper bound of $t_2$'s range. The rule guarantees that
-wherever $t_1$ and $t_2$'s indices eventually settle, $t_1$'s index is greater
-than $t_2$'s.
+addition then becomes that $t_2$ can add $t_1$ if the lower bound of $t_2$'s
+range is greater than the upper bound of $t_1$'s range. The rule guarantees that
+wherever $t_1$ and $t_2$'s indices eventually settle, $t_2$'s index is greater
+than $t_1$'s.
 
 All teams get the initial default range of $[1,\infty)$. When a team administrator
 seeks to add one team to another, she might need to change one or both of the team's
