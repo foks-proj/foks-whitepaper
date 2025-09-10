@@ -1046,7 +1046,7 @@ signature might not be reflected in the Merkle Tree at the time of the
 revocation. FOKS does not block signature creation on Merkle Tree production.
 For efficiency's sake, updates to the Merkle Tree are batched and might lag
 behind several seconds. To address this challenge, the FOKS server
-rejects signatures from devices or PUKs if there are associated signatures still
+rejects revocations of devices or PUKs if there are associated signatures still
 outstanding and not reflected in the Merkle Tree. Of course a dishonest server
 can intentionally fail in this capacity, which might cause signature chains to
 fail to playback. That is, the result would be a denial-of-service, which the
