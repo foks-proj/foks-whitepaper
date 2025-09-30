@@ -327,7 +327,7 @@ if possible, stores that 32-byte key in the user's OS keyring.
 \subsubsection{Passphrase-based Management}
 
 Though it's not encouraged, FOKS does offer a passphrase-based protection mechanism
-for secret key seeds. As above, each secret seed gets its own secret-key wrapping 
+for secret key seeds. As above, each secret seed gets its own secret-key 
 material wrapping key (SKMWK). But instead of storing the SKMWKs in the OS keystore,
 they are encrypted with a key derived from the user's passphrase. We have important 
 design considerations for this system that make it quite complex:
