@@ -5,7 +5,7 @@
 FOKS is a classic client-server system. At a high level, the clients
 manage private keys, and the server manages public keys, encryptions of, 
 shared secret keys, and encrypted data. Users generally trust their
-servers to be online, available and not to intentionally sabotage
+servers to be online, available, and not to intentionally sabotage
 agreed-upon protocols. 
 
 \subsection{System Architecture}
@@ -69,7 +69,7 @@ a device that has access to the latest PUK can get access easily to all prior
 PUKs.
 
 Once the PUK sequence is established, the system has a convenient way to encrypt
-a data for all of the user's devices --- it simply encrypts the data for the 
+a datum for all of the user's devices --- it simply encrypts the data for the 
 user's latest PUK.
 
 \subsubsection{Per-Team Keys (PTKs)}
@@ -124,7 +124,7 @@ and teams to share a secret encryption key. From there, they can share data
 encrypted (and authenticated) with that key. But the question becomes,
 how are users formulated from devices, and how are teams formulated from users
 so that only desired members are in the group, especially if the server
-behave maliciously?
+behaves maliciously?
 
 For instance, a malicious server might fool a user into encrypting secret data
 for an invalid device, or team administrator into encrypting data for an invalid
@@ -164,7 +164,7 @@ a signature over the following data:
        \label{item:name}
     \item A cryptographic commitment to the user's device name (picked by the user)
     \item The role of the new device (currently always \owner ).
-    \item For \yubis , a public ``subkey' used to authenticate the client
+    \item For \yubis , a public ``subkey'' used to authenticate the client
       to the server.
 \end{enumerate}
 
@@ -349,7 +349,7 @@ replies with intermediate blocks $j_1, j_2 \dots j_n$, such that
 $i < j_1 < \cdots j_n < k$,  where block $j_{a}$ contains
 a pointer to $j_{a-1}$, block $j_1$ contains a pointer to $i$
 and block $k$ contains a pointer to $j_n$. The spacing of the
-previous pointers in the root block ensures than $n$ is approximately
+previous pointers in the root block ensures that $n$ is approximately
 $\log (k-i)$. Chaining root blocks in this way 
 encourages the server to maintain a consistent, coherent append-only
 tree. Clients should perform periodic audits of all root blocks
@@ -439,7 +439,7 @@ the user follows is to enumerate all teams she is transitively a member
 of (since recall teams can be members of other teams), and then check
 each team for staleness, rotating those that are stale. If this membership
 list were based purely on server trust, a malicious server could withhold
-team memberships from a user to silent suppress team rotations.\footnote{
+team memberships from a user to silently suppress team rotations.\footnote{
     A malicious server could also reject a legitimate team update, but the user's
     software can alert the user of such a failure.
 } Instead of relying on server trust, the client software maintains a list
@@ -485,7 +485,7 @@ When users sign up for a new FOKS account, they establish a first device. They
 establish further devices via a process called ``provisioning''. In
 provisioning, an existing device signs the device key of the new device, and
 also sends it the private side of the current PUK. As we saw above, the
-signatures form a link in the sigchain. The server helps exchanged encrypted PUK
+signatures form a link in the sigchain. The server helps exchange encrypted PUK
 keys as ``sidecar'' data.
 
 \subsubsection{Device-to-Device}
@@ -774,7 +774,7 @@ to exchange information before the actual join process occurs. There are three g
 steps: (1) $p$ creates a multi-use invitation token, which $p$ can share with one or
 more parties; this invitation exposes the team's name, host and ID to all invitees; 
 (2) $q$ ``accepts'' this invitation, thereby granting $p$ access to its sigchain;
-and (3) $p$ ``admits`` $q$ into the team.
+and (3) $p$ ``admits'' $q$ into the team.
 
 \paragraph{Invite Tokens}
 
@@ -824,7 +824,7 @@ name of the team cannot be checked against the Merkle Tree, so the team's name
 might be forged. Eventually, once $p$ is admitted into the team, it can check
 that these fields are correct, and leave the team if not.  By accepting the
 invitation, be it malicious or otherwise, $p$ is primarily giving access to
-  reading its sigchain. It must decide whether or not this is a good idea on the
+reading its sigchain. It must decide whether or not this is a good idea on the
 basis of who sent the team invitation in the first place. This problem can
 recursively be solved in FOKS, perhaps by a different team, or by trusted
 channel on a different platform, like a secure team chat.
@@ -1052,7 +1052,7 @@ can intentionally fail in this capacity, which might cause signature chains to
 fail to playback. That is, the result would be a denial-of-service, which the
 server is always capable of.
 
-Above we described how revocation of user devices work. Removal of members from 
+Above, we described how revocation of user devices work. Removal of members from 
 teams follows a similar protocol.  Note here is one rationale for requiring team
 admins to be local to the server that a team is on. Were it otherwise, the
 server could not carefully sequence signatures and revocations, as it does with

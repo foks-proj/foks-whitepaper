@@ -88,14 +88,14 @@ with a special RPC, which returns the directory ID and its boxed directory key s
 To walk down to \texttt{/a}, the client MAC's the name \texttt{a} with MAC keys 
 derived from these seeds, and then queries the server for the dirent in \texttt{/}
 with the computed MAC, at the greatest version. This dirent, if found, contains a
-```binding MAC```, which cryptographically binds the dirents fields together, as MACed
+``binding MAC'', which cryptographically binds the dirents fields together, as MACed
 by the directory's MAC key. The client verifies this MAC, and if it passes, then the next
 step in the path is the ``value'' field of the dirent, which contains the directory ID
 of \texttt{/a}. This process continues until the leaf is reached.
 
 To reduce latency, clients make heavy use of local caching. As they walk, they write down
 which dirents they passed through and which versions of those dirents that they saw.
-At the end of the process, the send up the whole path to the server, asking if any dirent
+At the end of the process, they send up the whole path to the server, asking if any dirent
 was stale. If so, the clients repeats parts of the walk to get fresh data. 
 
 Note there is a special value field for ``tombstones,'' which signify that the 

@@ -24,7 +24,7 @@ but the specifics depend on the trustworthiness of the server (see below). Simil
 keys on lost devices lose their signing power, and other devices will not accept
 their signatures going forward.
 
-The threat model is here is similar but not exactly the same as Signal's and
+The threat model here is similar but not exactly the same as Signal's and
 WhatsApp's, because our applications feature persistent (rather than ephemeral)
 data. If a new user joins an existing group, or if a user adds a new device,
 they should be able to access old data, which might be required to reassemble the
@@ -51,7 +51,7 @@ clients will lose access to their data.
 
 When servers are behaving honestly, they can provide clients with
 forward-secrecy. That is, if honest servers throw away data encrypted with old
-keys, attackers with access to private keys cannot cannot recover past data.  If
+keys, attackers with access to private keys cannot recover past data.  If
 we assume on the other hand that an attacker who steals a private key operates
 in cahoots with the server, then we cannot offer any guarantees about forward
 secrecy.
