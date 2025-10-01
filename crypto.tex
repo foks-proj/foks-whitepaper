@@ -151,19 +151,19 @@ a pair of items are hashed together (one being the ``key'' and the other being
 the ``data''). Authenticated symmetric encryption uses Salsa20/Poly1305 as
 implemented by the NaCl~\cite{nacl} library. Sals20 has a 24-byte nonce field,
 which is often handy when combining with our domain separation strategy with
-other authenticated data. We throughout refer to encrypting with Salsa20 as
+other authenticated data. Throughout, we refer to encrypting with Salsa20 as
 \texttt{secretBox}'ing, as per the library's conventions.
 
 \subsubsection{Signatures and Post-Quantum Encryption}
 
 For signing, we use EdDSA with the Ed25519 curve~\cite{eddsa}.  Public-key
 encryption is a hybrid of Diffie-Hellman over
-Curve25519~\cite{bernstein2006curve25519}, and MLKEM~\cite{nist-fips-203} using a
+Curve25519~\cite{bernstein2006curve25519}, and ML-KEM~\cite{nist-fips-203} using a
 construction similar to X-Wing~\cite{xwing}, but with a different binary
 encoding format and constants. Thus, in practice, all device keys, PUKs,
 PTKs, and so on are not a single keypair, but rather a triple: an EdDSA 
-keypair, a Curve25519 keypair, and an MLKEM keypair. Wherever public keys
-are introduced, an EdDSA signature over the Curve25519 and MLKEM public keys
+keypair, a Curve25519 keypair, and an ML-KEM keypair. Wherever public keys
+are introduced, an EdDSA signature over the Curve25519 and ML-KEM public keys
 is produced to bind them together.
 
 The exact derivation of the hybrid encryption secret key is specified in 
@@ -271,7 +271,7 @@ around existing PIVs as follows:
 \end{enumerate}
 
 An important property of this system is that all of the relevant key material
-lives on the \yubi ; none lives on the user's computer. The \yubi is all the
+lives on the \yubi ; none lives on the user's computer. The \yubi{} is all the
 user needs to recover important secrets, even if the computer is lost or suffers
 data loss. Further, this system is no less secure than an encryption scheme
 without PQ-security, as the classical ECDH computation still happens on the
@@ -327,7 +327,7 @@ if possible, stores that 32-byte key in the user's OS keyring.
 \subsubsection{Passphrase-based Management}
 
 Though it's not encouraged, FOKS does offer a passphrase-based protection mechanism
-for secret key seeds. As above, each secret seed gets its own secret-key wrapping 
+for secret key seeds. As above, each secret seed gets its own secret-key 
 material wrapping key (SKMWK). But instead of storing the SKMWKs in the OS keystore,
 they are encrypted with a key derived from the user's passphrase. We have important 
 design considerations for this system that make it quite complex:
@@ -361,7 +361,7 @@ the property should hold.
 We describe the process through a small example: two rotations, one due to a PUK rotation,
 and one due to a passphrase change. The net result is three different configurations
 (the original, and the two following rotations). The general idea is that we have a new ``session''
-key at every update, which is symmetrically encrypts the SKMWKs. The session key gets encrypted
+key at every update, which symmetrically encrypts the SKMWKs. The session key gets encrypted
 twice: once for a key derived from the current passphrase, and one for the user's PUK. This
 allows recovery of the SKMWKs with either the passphrase or the PUK:
 %
