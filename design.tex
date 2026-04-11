@@ -495,8 +495,9 @@ The most complicated case is device-to-device provisioning. A user has an
 active account on device $d_1$ and uses it to directly provision device $d_2$.
 We call the existing device, $d_1$, the ``provisioner'', and the new device, $d_2$,
 the ``provisionee.''
-Device $d_2$ generates a new device key $k_2$ and prompts the user for
-a device name, which is $n_2$.
+Device $d_2$ generates a new device keypair $(k_2,K_2)$ and prompts the user for
+a device name, which is $n_2$. $d_2$ writes the secret key $k_2$ to the local keystore (see~\ref{sec:skm})
+and exchanges the public key $K_2$ in the following key exchange.
 Both devices pick random 125-bit session keys, call them $s_1$ and $s_2$. Both clients
 show these keys to the user, using a simple encoding scheme we call
 ``high-entropy secret phrase''. See Section~\ref{sec:hesp} for more details.
@@ -518,7 +519,7 @@ or $s_1$ on device $D_2$. In both cases, the message flow is as follows:
   \node (d2) at (6,6) {$d_2$ (provisionee)};
 
   \draw[->] ($(d1)+(0,-1)$) -- node[above] {[start]} ($(d2)+(0,-1)$);
-  \draw[->] ($(d2)+(0,-2)$) -- node[above] {hello: $k_2$, $n_2$} ($(d1)+(0,-2)$);
+  \draw[->] ($(d2)+(0,-2)$) -- node[above] {hello: $K_2$, $n_2$} ($(d1)+(0,-2)$);
   \draw[->] ($(d1)+(0,-3)$) -- node[above] {please sign: link $l$, token $t$} ($(d2)+(0,-3)$);
   \draw[->] ($(d2)+(0,-4)$) -- node[above] {please counter-sign: link $l$} ($(d1)+(0,-4)$);
   \draw[->] ($(d1)+(0,-5)$) -- node[above] {done} ($(d2)+(0,-5)$);
@@ -531,8 +532,10 @@ or $s_1$ on device $D_2$. In both cases, the message flow is as follows:
 The first message, ``start'', is optional and only needed in the case that $s_2$
 is entered on device $d_1$. In the ``hello'' message, the provisionee sends its
 new key and desired device name over to the provisioner. The provisioner then
-makes a sigchain link, $l$, and in the ``please sign'' message, asks the
-provisionee to sign it with $k_2$, the new device key. The provisioner also
+constructs a new sigchain link $l$ that contains $K_2$, $n_2$ and other data
+relevant the user's account.
+In the ``please sign'' message, the provisioner asks the
+provisionee to sign $l$ with $k_2$, the new device key. The provisioner also
 includes token $t$ so the provisionee can load the user's sigchain from the
 server. In the ``please counter-sign'' message, the provisionee returns the
 signed link and asks the provisioner sign it a second time with $k_1$, $d_1$'s
